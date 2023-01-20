@@ -27,8 +27,8 @@ public class UserService {
         UserModel userModel = new UserModel();
         if (!name.isEmpty() && userRepository.findByUsernameEquals(name).isEmpty()){
             userModel.setUsername(name);
-            userModel.setBalance(BigDecimal.valueOf(Constant.MIN_BALANCE));            //TODO: DELETE LATER
-            userModel.setTransactionLimit(BigDecimal.valueOf(Constant.MAX_TRANSACTION));
+            userModel.setBalance(Constant.MIN_BALANCE);            //TODO: DELETE LATER
+            userModel.setTransactionLimit(Constant.MAX_TRANSACTION);
         } else {
             throw new Exception("Nama tidak boleh kosong atau sudah digunakan");
         }
@@ -67,7 +67,7 @@ public class UserService {
             throw new Exception("Nomor KTP sudah digunakan");
         } else {
             userModel.setKtp(um.getKtp());
-            userModel.setTransactionLimit(BigDecimal.valueOf(Constant.MAX_TRANSACTION_WITH_KTP));
+            userModel.setTransactionLimit(Constant.MAX_TRANSACTION_WITH_KTP);
         }
         return userRepository.save(userModel);
     }

@@ -13,10 +13,10 @@ import java.math.BigDecimal;
 public class TransactionModel extends AbstractAuditingEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    public int id;
+    public int trxId;
 
     @Column
-    public BigDecimal originUsername;
+    public String originUsername;
 
     @Column
     public String destinationUsername;
