@@ -29,4 +29,13 @@ public class TransactionController {
         }
     }
 
+    @PostMapping("/topup")
+    public ResponseEntity<Object> topup(@RequestBody RequestCreateDTO request){
+        try {
+            transactionService.topUp(request.getUsername(), request.getPassword(), request.getAmount());
+            return ResponseHandler.generateResponse("Berhasil Topup", HttpStatus.OK, null);
+        } catch (Exception e){
+            return ResponseHandler.generateResponse(e.getMessage(), HttpStatus.BAD_REQUEST, null);
+        }
+    }
 }

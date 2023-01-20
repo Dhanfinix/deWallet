@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.Locale;
 
 @Service
@@ -47,25 +48,46 @@ public class TransactionService {
             var min_trx = Constant.MIN_TRANSACTION;
             throw new Exception("Minimum transaksi adalah: " + min_trx);
         }
-            else {
-            sender.setBalance(sender.getBalance().subtract(amount));       //mengurangi saldo sender
-            recipient.setBalance(recipient.getBalance().add(amount));       //menambah saldo recipient
+        var newAmount = amount.subtract(amount.multiply(BigDecimal.valueOf(Constant.TRANSACTION_TAX)));
+        sender.setBalance(sender.getBalance().subtract(newAmount));       //mengurangi saldo sender
+        recipient.setBalance(recipient.getBalance().add(newAmount));       //menambah saldo recipient
 
-            transaction.setOriginUsername(username);
-            transaction.setDestinationUsername(destinationUsername);
-            transaction.setAmount(amount);
-            transaction.setStatus(Constant.SETTLED);
+        transaction.setOriginUsername(username);
+        transaction.setDestinationUsername(destinationUsername);
+        transaction.setAmount(newAmount);
+        transaction.setStatus(Constant.SETTLED);
 
-            userRepository.save(sender);
-            userRepository.save(recipient);
-            transactionRepository.save(transaction);
-        }
+        userRepository.save(sender);
+        userRepository.save(recipient);
+        transactionRepository.save(transaction);
         return CreateDTO.builder()
                 .trxId(transaction.getTrxId())
                 .originUsername(sender.getUsername())
                 .destinationUsername(recipient.getUsername())
-                .amount(amount)
+                .amount(newAmount.divide(BigDecimal.valueOf(1000), RoundingMode.DOWN))     //
                 .status(Constant.SETTLED)
                 .build();
+    }
+
+    public void topUp(String username, String password, BigDecimal amount) throws Exception{
+        UserModel userModel = userRepository.findByUsername(username);
+        TransactionModel transaction = new TransactionModel();
+        var maxTopUp = Constant.MAX_TOPUP;
+        if (userModel == null) {
+            throw new Exception("Username tidak ditemukan");
+        } else if (!userModel.getPassword().equals(password)){
+            throw new Exception("Password salah");
+        } else if (maxTopUp.compareTo(amount) < 0){
+            throw new Exception("Jumlah melebihi nilai topup maksimum sebesar: " + maxTopUp);
+        } else if (userModel.getBalance().add(amount).compareTo(Constant.MAX_BALANCE) > 0){
+            throw new Exception("Saldo maksimal terlampaui");
+        }
+
+        userModel.setBalance(userModel.getBalance().add(amount));
+        transaction.setOriginUsername(username);
+        transaction.setAmount(amount);
+
+        userRepository.save(userModel);
+        transactionRepository.save(transaction);
     }
 }
