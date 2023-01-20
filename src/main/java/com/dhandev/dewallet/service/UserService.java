@@ -33,7 +33,7 @@ public class UserService {
             throw new Exception("Nama tidak boleh kosong atau sudah digunakan");
         }
 
-        if (password.matches("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{8,}$")){
+        if (password.matches(Constant.REGEX_PASSWORD)){
             userModel.setPassword(password);
         } else {
             throw new Exception("Password minimal terdiri dari 8 karakter dengan angka, huruf kapital dan kecil");
@@ -88,6 +88,7 @@ public class UserService {
         UserModel userModel = userRepository.findByUsername(name);
         if (!userModel.getUsername().isEmpty()){
             userModel.setBanned(false);
+            userModel.setPasswordAttempt(0);
         } else {
             throw new Exception("Username tidak ditemukan");
         }
@@ -103,8 +104,8 @@ public class UserService {
         String newPass = um.getPassword();          //dari input
         if (newPass.equals(oldPass)){
             throw new Exception("Password baru sama dengan password lama");
-        } else if (!newPass.matches("^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{8,}$")){
-            throw new Exception("Password minimal terdiri dari 8 karakter dengan angka, huruf kapital dan kecil");
+        } else if (!newPass.matches(Constant.REGEX_PASSWORD)){
+            throw new Exception("Password minimal terdiri dari 10 karakter dengan angka, huruf kapital dan kecil, serta simbol");
         } else {
             userModel.setOldPassword(oldPass);          //set oldPass dari pass saat ini
             userModel.setPassword(newPass);            //set pass dari pass baru

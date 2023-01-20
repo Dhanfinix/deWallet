@@ -52,4 +52,7 @@ public class UserModel extends AbstractAuditingEntity {
 
     @OneToMany(mappedBy = "userModel")
     private List<TransactionModel> transaction;
+
+    @Column
+    private int passwordAttempt = 0;
 }

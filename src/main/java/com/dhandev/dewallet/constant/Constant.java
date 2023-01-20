@@ -19,4 +19,6 @@ public class Constant {
     //DOUBLE -TRANSACTION TAX
 
     public static final String SETTLED = "SETTLED";
+
+    public static final String REGEX_PASSWORD = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#&()–[{}]:;',?/*~$^+=<>]).{10,}$";
 }

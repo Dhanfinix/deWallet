@@ -31,11 +31,19 @@ public class TransactionService {
     public CreateDTO createDTO(String username, String password, String destinationUsername, BigDecimal amount) throws Exception{
         UserModel sender = userRepository.findByUsername(username);
         UserModel recipient = userRepository.findByUsername(destinationUsername);
+        var attempt = sender.getPasswordAttempt();
         TransactionModel transaction = new TransactionModel();
         if (sender.getUsername().isEmpty()){
             throw new Exception("Tidak ditemukan username pengirim");
         } else if (!sender.getPassword().equals(password)){
+            if (attempt>3){
+                sender.setBanned(true);
+                throw new Exception("Akun anda terblokir");
+            }
+            sender.setPasswordAttempt(attempt+1);
             throw new Exception("Password salah");
+        } else if (sender.isBanned()){
+            throw new Exception("Akun anda terblokir");
         } else if (recipient.getUsername().isEmpty()){
             throw new Exception("Tidak ditemukan username penerima");
         } else if (sender.getTransactionLimit().compareTo(amount) < 0){     //Jika limit lebih besar dari amount, lempar eror
@@ -48,6 +56,8 @@ public class TransactionService {
             var min_trx = Constant.MIN_TRANSACTION;
             throw new Exception("Minimum transaksi adalah: " + min_trx);
         }
+
+        sender.setPasswordAttempt(0);
         var newAmount = amount.subtract(amount.multiply(BigDecimal.valueOf(Constant.TRANSACTION_TAX)));
         sender.setBalance(sender.getBalance().subtract(newAmount));       //mengurangi saldo sender
         recipient.setBalance(recipient.getBalance().add(newAmount));       //menambah saldo recipient
@@ -75,13 +85,23 @@ public class TransactionService {
         var maxTopUp = Constant.MAX_TOPUP;
         if (userModel == null) {
             throw new Exception("Username tidak ditemukan");
-        } else if (!userModel.getPassword().equals(password)){
+        }
+        var attempt = userModel.getPasswordAttempt();
+        if (!userModel.getPassword().equals(password)){
+            if (attempt>3){
+                userModel.setBanned(true);
+                throw new Exception("Password salah tiga kali, akun terkunci");
+            }
+            userModel.setPasswordAttempt(attempt+1);
             throw new Exception("Password salah");
+        } else if (userModel.isBanned()){
+            throw new Exception("Akun anda terblokir");
         } else if (maxTopUp.compareTo(amount) < 0){
             throw new Exception("Jumlah melebihi nilai topup maksimum sebesar: " + maxTopUp);
         } else if (userModel.getBalance().add(amount).compareTo(Constant.MAX_BALANCE) > 0){
             throw new Exception("Saldo maksimal terlampaui");
         }
+        userModel.setPasswordAttempt(0);
 
         userModel.setBalance(userModel.getBalance().add(amount));
         transaction.setOriginUsername(username);
