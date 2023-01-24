@@ -2,6 +2,7 @@ package com.dhandev.dewallet.service;
 
 import com.dhandev.dewallet.constant.Constant;
 import com.dhandev.dewallet.dto.CreateDTO;
+import com.dhandev.dewallet.dto.GetReportDTO;
 import com.dhandev.dewallet.model.TransactionModel;
 import com.dhandev.dewallet.model.UserModel;
 import com.dhandev.dewallet.repository.TransactionRepository;
@@ -14,6 +15,11 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
@@ -69,10 +75,12 @@ public class TransactionService {
         transactionSender.setUsername(username);
         transactionSender.setAmount(newAmount.negate());
         transactionSender.setStatus(Constant.SETTLED);
+        transactionSender.setTrxDate(LocalDate.now());
         ////
         transactionRecipient.setUsername(destinationUsername);
         transactionRecipient.setAmount(newAmount);
         transactionRecipient.setStatus(Constant.SETTLED);
+        transactionRecipient.setTrxDate(LocalDate.now());
 
         transactionSender.setUserModel(sender);
         transactionRecipient.setUserModel(recipient);
@@ -121,9 +129,17 @@ public class TransactionService {
         transaction.setAmount(amount);
         transaction.setStatus(Constant.SETTLED);
         transaction.setUserModel(userModel);
+        transaction.setTrxDate(LocalDate.now());
 
         transactionRepository.save(transaction);
     }
 
-
+    public List<TransactionModel> getReport(String createdDate) throws Exception {
+        List<TransactionModel> result = transactionRepository.findAllByTrxDate(LocalDate.now());
+        if (result.isEmpty()){
+            throw new Exception("Report tidak ditemukan");
+        } else{
+            return result;
+        }
+    }
 }
