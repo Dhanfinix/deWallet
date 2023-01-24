@@ -16,10 +16,7 @@ public class TransactionModel extends AbstractAuditingEntity {
     public int trxId;
 
     @Column
-    public String originUsername;
-
-    @Column
-    public String destinationUsername;
+    public String username;
 
     @ManyToOne
     @JoinColumn(name = "user_id")

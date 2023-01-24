@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.List;
 import java.util.Locale;
 
 @Service
@@ -32,7 +33,8 @@ public class TransactionService {
         UserModel sender = userRepository.findByUsername(username);
         UserModel recipient = userRepository.findByUsername(destinationUsername);
         var attempt = sender.getPasswordAttempt();
-        TransactionModel transaction = new TransactionModel();
+        TransactionModel transactionSender = new TransactionModel();
+        TransactionModel transactionRecipient = new TransactionModel();
         if (sender.getUsername().isEmpty()){
             throw new Exception("Tidak ditemukan username pengirim");
         } else if (!sender.getPassword().equals(password)){
@@ -46,6 +48,8 @@ public class TransactionService {
             throw new Exception("Akun anda terblokir");
         } else if (recipient.getUsername().isEmpty()){
             throw new Exception("Tidak ditemukan username penerima");
+        } else if (amount.compareTo(BigDecimal.valueOf(0)) <0){
+            throw new Exception("Top up gagal karena bernilai negatif");
         } else if (sender.getTransactionLimit().compareTo(amount) < 0){     //Jika limit lebih besar dari amount, lempar eror
             var limit = sender.getTransactionLimit();
             UserService.currencyFormat(limit, new Locale("in", "ID"));
@@ -62,19 +66,26 @@ public class TransactionService {
         sender.setBalance(sender.getBalance().subtract(newAmount));       //mengurangi saldo sender
         recipient.setBalance(recipient.getBalance().add(newAmount));       //menambah saldo recipient
 
-        transaction.setOriginUsername(username);
-        transaction.setDestinationUsername(destinationUsername);
-        transaction.setAmount(newAmount);
-        transaction.setStatus(Constant.SETTLED);
+        transactionSender.setUsername(username);
+        transactionSender.setAmount(newAmount.negate());
+        transactionSender.setStatus(Constant.SETTLED);
+        ////
+        transactionRecipient.setUsername(destinationUsername);
+        transactionRecipient.setAmount(newAmount);
+        transactionRecipient.setStatus(Constant.SETTLED);
 
-        userRepository.save(sender);
-        userRepository.save(recipient);
-        transactionRepository.save(transaction);
+        transactionSender.setUserModel(sender);
+        transactionRecipient.setUserModel(recipient);
+        transactionRepository.saveAll(List.of(transactionSender, transactionRecipient));
+
+        //COBA HAPUS, KAN UDAH SET USER DI TRANSACTION, yup bisa dihapus
+//        userRepository.save(sender);
+//        userRepository.save(recipient);
         return CreateDTO.builder()
-                .trxId(transaction.getTrxId())
+                .trxId(transactionSender.getTrxId())
                 .originUsername(sender.getUsername())
                 .destinationUsername(recipient.getUsername())
-                .amount(newAmount.divide(BigDecimal.valueOf(1000), RoundingMode.DOWN))     //
+                .amount(newAmount.divide(BigDecimal.valueOf(1000), RoundingMode.DOWN))     //Pembulatan kebawah
                 .status(Constant.SETTLED)
                 .build();
     }
@@ -96,6 +107,8 @@ public class TransactionService {
             throw new Exception("Password salah");
         } else if (userModel.isBanned()){
             throw new Exception("Akun anda terblokir");
+        } else if (amount.compareTo(BigDecimal.valueOf(0)) <0){
+            throw new Exception("Top up gagal karena bernilai negatif");
         } else if (maxTopUp.compareTo(amount) < 0){
             throw new Exception("Jumlah melebihi nilai topup maksimum sebesar: " + maxTopUp);
         } else if (userModel.getBalance().add(amount).compareTo(Constant.MAX_BALANCE) > 0){
@@ -104,10 +117,13 @@ public class TransactionService {
         userModel.setPasswordAttempt(0);
 
         userModel.setBalance(userModel.getBalance().add(amount));
-        transaction.setOriginUsername(username);
+        transaction.setUsername(username);
         transaction.setAmount(amount);
+        transaction.setStatus(Constant.SETTLED);
+        transaction.setUserModel(userModel);
 
-        userRepository.save(userModel);
         transactionRepository.save(transaction);
     }
+
+
 }
