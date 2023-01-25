@@ -61,8 +61,8 @@ public class UserService {
         UserModel userModel = userRepository.findByUsername(name);
         if (userModel == null){
             throw new Exception("Username tidak ditemukan");
-        } else if (um.getKtp().length() != 16){
-            throw new Exception("Nomor KTP harus 16 digit");
+        } else if (!um.getKtp().matches(Constant.REGEX_KTP)){
+            throw new Exception("Nomor KTP harus 16 digit dan tidak mengandung huruf");
         } else if (!userRepository.findByKtpEquals(um.getKtp()).isEmpty()){  //bandingkan input dengan database
             throw new Exception("Nomor KTP sudah digunakan");
         } else {
