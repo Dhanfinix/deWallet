@@ -50,7 +50,7 @@ public class UserController {
     public ResponseEntity<Object> addKtp(@PathVariable String username, @RequestBody UserModel um){
         try {
             UserModel result = userService.updateKtp(username, um);
-            return ResponseHandler.generateResponse("OK", HttpStatus.OK, result);
+            return ResponseHandler.generateResponse("OK", HttpStatus.OK, null);
         } catch (Exception e){
             return ResponseHandler.generateResponse(e.getMessage(), HttpStatus.BAD_REQUEST, null);
         }

@@ -36,7 +36,7 @@ public class UserService {
         if (password.matches(Constant.REGEX_PASSWORD)){
             userModel.setPassword(password);
         } else {
-            throw new Exception("Password minimal terdiri dari 8 karakter dengan angka, huruf kapital dan kecil");
+            throw new Exception("Password minimal terdiri dari 10 karakter dengan angka, huruf kapital dan kecil");
         }
         return userRepository.save(userModel);
     }
