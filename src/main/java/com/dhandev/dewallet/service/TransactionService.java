@@ -70,20 +70,24 @@ public class TransactionService {
 
         sender.setPasswordAttempt(0);
         var newAmount = amount.subtract(amount.multiply(BigDecimal.valueOf(Constant.TRANSACTION_TAX)));
-        sender.setBalance(sender.getBalance().subtract(newAmount));       //mengurangi saldo sender
-        recipient.setBalance(recipient.getBalance().add(newAmount));       //menambah saldo recipient
 
         transactionSender.setUsername(username);
         transactionSender.setAmount(newAmount.negate());
         transactionSender.setStatus(Constant.SETTLED);
         transactionSender.setTrxDate(LocalDate.now());
-        transactionSender.setBalance(sender.getBalance());
+        transactionSender.setBalanceBefore(sender.getBalance());
+
+        sender.setBalance(sender.getBalance().subtract(newAmount));       //mengurangi saldo sender
+        transactionSender.setBalanceAfter(sender.getBalance());
         ////
         transactionRecipient.setUsername(destinationUsername);
         transactionRecipient.setAmount(newAmount);
         transactionRecipient.setStatus(Constant.SETTLED);
         transactionRecipient.setTrxDate(LocalDate.now());
-        transactionRecipient.setBalance(recipient.getBalance());
+        transactionRecipient.setBalanceBefore(recipient.getBalance());
+
+        recipient.setBalance(recipient.getBalance().add(newAmount));       //menambah saldo recipient
+        transactionRecipient.setBalanceAfter(recipient.getBalance());
 
         transactionSender.setUserModel(sender);
         transactionRecipient.setUserModel(recipient);
@@ -127,13 +131,15 @@ public class TransactionService {
         }
         userModel.setPasswordAttempt(0);
 
-        userModel.setBalance(userModel.getBalance().add(amount));
         transaction.setUsername(username);
         transaction.setAmount(amount);
         transaction.setStatus(Constant.SETTLED);
         transaction.setUserModel(userModel);
         transaction.setTrxDate(LocalDate.now());
-        transaction.setBalance(userModel.getBalance());
+        transaction.setBalanceBefore(userModel.getBalance());
+
+        userModel.setBalance(userModel.getBalance().add(amount));
+        transaction.setBalanceAfter(userModel.getBalance());
 
         transactionRepository.save(transaction);
     }
@@ -151,19 +157,21 @@ public class TransactionService {
             System.out.println(collect.keySet());
             for (Object o : key) {                         //for loop key/ user
                 GetReportDTO getReportDTO = new GetReportDTO();
-                ArrayList<BigDecimal> balance = new ArrayList<>();
+                ArrayList<BigDecimal> balanceAfter = new ArrayList<>();
+                ArrayList<BigDecimal> balanceBefore = new ArrayList<>();
                 for (var v = 0; v < result.toArray().length; v++) {        //for loop value/ transaksi
                     if (result.get(v).getUsername().equals(o)) {    //jika username pada value sama dengan key
-                        balance.add(result.get(v).getBalance());
+                        balanceAfter.add(result.get(v).getBalanceAfter());
+                        balanceBefore.add(result.get(v).getBalanceBefore());
                         getReportDTO.setUsername(o.toString());
                         getReportDTO.setBalanceChangeDate(LocalDate.parse(createdDate));
                     }
                 }
-                System.out.println(balance);
-                var firstBalance = balance.get(0);
-                var lastBalance = balance.get(balance.size() - 1);
-                var changeBalance = lastBalance.subtract(firstBalance);
-                getReportDTO.setChangeInPercentage(changeBalance.divide(lastBalance, RoundingMode.DOWN) + "%");
+                System.out.println(balanceAfter);
+                var firstBalance = balanceBefore.get(0).doubleValue();    //final balance of d-1
+                var lastBalance = balanceAfter.get(balanceAfter.size() - 1).doubleValue();    //final balance from last transaction of today
+                var changeBalance = lastBalance - firstBalance;
+                getReportDTO.setChangeInPercentage(String.format("%,.2f", changeBalance/firstBalance*100) + "%");
                 response.add(getReportDTO);
             }
 
