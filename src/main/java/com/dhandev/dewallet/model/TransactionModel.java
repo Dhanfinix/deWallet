@@ -35,4 +35,7 @@ public class TransactionModel extends AbstractAuditingEntity {
     @Column
     public LocalDate trxDate;
 
+    @Column
+    public BigDecimal balance;
+
 }

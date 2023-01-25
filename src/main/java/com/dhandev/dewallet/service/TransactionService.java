@@ -19,9 +19,10 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Date;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
+import java.util.stream.Collectors;
+
+import static com.dhandev.dewallet.service.UserService.currencyFormat;
 
 @Service
 @Transactional
@@ -58,7 +59,7 @@ public class TransactionService {
             throw new Exception("Top up gagal karena bernilai negatif");
         } else if (sender.getTransactionLimit().compareTo(amount) < 0){     //Jika limit lebih besar dari amount, lempar eror
             var limit = sender.getTransactionLimit();
-            UserService.currencyFormat(limit, new Locale("in", "ID"));
+            currencyFormat(limit, new Locale("in", "ID"));
             throw new Exception("Jumlah melewati limit saat ini yaitu: " + limit);
         } else if (sender.getBalance().add(Constant.MIN_BALANCE).compareTo(amount) < 0){          //balance kurang
             throw new Exception("Saldo kurang untuk melakukan transaksi");
@@ -76,11 +77,13 @@ public class TransactionService {
         transactionSender.setAmount(newAmount.negate());
         transactionSender.setStatus(Constant.SETTLED);
         transactionSender.setTrxDate(LocalDate.now());
+        transactionSender.setBalance(sender.getBalance());
         ////
         transactionRecipient.setUsername(destinationUsername);
         transactionRecipient.setAmount(newAmount);
         transactionRecipient.setStatus(Constant.SETTLED);
         transactionRecipient.setTrxDate(LocalDate.now());
+        transactionRecipient.setBalance(recipient.getBalance());
 
         transactionSender.setUserModel(sender);
         transactionRecipient.setUserModel(recipient);
@@ -130,16 +133,51 @@ public class TransactionService {
         transaction.setStatus(Constant.SETTLED);
         transaction.setUserModel(userModel);
         transaction.setTrxDate(LocalDate.now());
+        transaction.setBalance(userModel.getBalance());
 
         transactionRepository.save(transaction);
     }
 
-    public List<TransactionModel> getReport(String createdDate) throws Exception {
-        List<TransactionModel> result = transactionRepository.findAllByTrxDate(LocalDate.now());
+    public Map<String, List<GetReportDTO>> getReport(String createdDate) throws Exception {
+        List<TransactionModel> result = transactionRepository.findAllByTrxDate(LocalDate.parse(createdDate));
+        ArrayList<GetReportDTO> response = new ArrayList<>();
+
         if (result.isEmpty()){
             throw new Exception("Report tidak ditemukan");
         } else{
-            return result;
+            Map<String, List<TransactionModel>> collect = result.stream().collect(Collectors.groupingBy(TransactionModel::getUsername));
+            Object[] key = collect.keySet().toArray();
+
+            System.out.println(collect.keySet());
+            for (Object o : key) {                         //for loop key/ user
+                GetReportDTO getReportDTO = new GetReportDTO();
+                ArrayList<BigDecimal> balance = new ArrayList<>();
+                for (var v = 0; v < result.toArray().length; v++) {        //for loop value/ transaksi
+                    if (result.get(v).getUsername().equals(o)) {    //jika username pada value sama dengan key
+                        balance.add(result.get(v).getBalance());
+                        getReportDTO.setUsername(o.toString());
+                        getReportDTO.setBalanceChangeDate(LocalDate.parse(createdDate));
+                    }
+
+//                    getReportDTO.setChangeInPercentage(calculateAverage(saldo));
+                }
+                System.out.println(balance);
+                var firstBalance = balance.get(0);
+                var lastBalance = balance.get(balance.size() - 1);
+                var changeBalance = lastBalance.subtract(firstBalance);
+                getReportDTO.setChangeInPercentage(changeBalance.divide(lastBalance, RoundingMode.DOWN).toString() + "%");
+                response.add(getReportDTO);
+            }
+            Map<String, List<GetReportDTO>> collect1 = response.stream().collect(Collectors.groupingBy(GetReportDTO::getUsername));
+
+
+            return collect1;
         }
+    }
+
+    private double calculateSum(ArrayList <BigDecimal> marks) {
+        return marks.stream()
+                .mapToDouble(BigDecimal::doubleValue)
+                .sum();
     }
 }
