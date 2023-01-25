@@ -25,18 +25,17 @@ public class UserService {
     private ModelMapper modelMapper;
     public UserModel register(String name, String password) throws Exception {
         UserModel userModel = new UserModel();
-        if (!name.isEmpty() && userRepository.findByUsernameEquals(name).isEmpty()){
+        if (name.isEmpty()){
+            throw new Exception("Nama tidak boleh kosong ");
+        } else if (!userRepository.findByUsernameEquals(name).isEmpty()){
+            throw new Exception("Nama sudah digunakan");
+        } else if (!password.matches(Constant.REGEX_PASSWORD)){
+            throw new Exception("Password minimal terdiri dari 10 karakter dengan angka, huruf kapital dan kecil");
+        } else {
             userModel.setUsername(name);
             userModel.setBalance(Constant.MIN_BALANCE);            //TODO: DELETE LATER
             userModel.setTransactionLimit(Constant.MAX_TRANSACTION);
-        } else {
-            throw new Exception("Nama tidak boleh kosong atau sudah digunakan");
-        }
-
-        if (password.matches(Constant.REGEX_PASSWORD)){
             userModel.setPassword(password);
-        } else {
-            throw new Exception("Password minimal terdiri dari 10 karakter dengan angka, huruf kapital dan kecil");
         }
         return userRepository.save(userModel);
     }
