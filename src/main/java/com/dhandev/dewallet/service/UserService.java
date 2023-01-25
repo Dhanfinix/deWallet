@@ -46,11 +46,11 @@ public class UserService {
         return nf.format(value);
     }
 
-    public UserDTO getInfo(int id) throws Exception{
-        Optional<UserModel> userModel = userRepository.findById(id);
+    public UserDTO getInfo(String username) throws Exception{
+        UserModel userModel = userRepository.findByUsername(username);
         UserDTO userDTO;
-        if (userModel.isPresent()){
-            userDTO = modelMapper.map(userModel.get(), UserDTO.class);
+        if (userModel != null){
+            userDTO = modelMapper.map(userModel, UserDTO.class);
         } else {
             throw new Exception("Id tidak ditemukan");
         }

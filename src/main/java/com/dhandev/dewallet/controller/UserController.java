@@ -34,10 +34,10 @@ public class UserController {
 
 
     //DONE  show username and ktp columns, use DTO and ModelMapper
-    @GetMapping("/{id}/getinfo")
-    public ResponseEntity<Object> getInfo(@PathVariable int id){
+    @GetMapping("/{username}/getinfo")
+    public ResponseEntity<Object> getInfo(@PathVariable String username){
         try {
-            UserDTO result = userService.getInfo(id);
+            UserDTO result = userService.getInfo(username);
             return ResponseHandler.generateResponse("OK", HttpStatus.OK, result);
         } catch (Exception e){
             return ResponseHandler.generateResponse(e.getMessage(), HttpStatus.BAD_REQUEST, null);
