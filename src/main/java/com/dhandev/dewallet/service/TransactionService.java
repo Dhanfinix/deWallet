@@ -138,7 +138,7 @@ public class TransactionService {
         transactionRepository.save(transaction);
     }
 
-    public Map<String, List<GetReportDTO>> getReport(String createdDate) throws Exception {
+    public List<GetReportDTO> getReport(String createdDate) throws Exception {
         List<TransactionModel> result = transactionRepository.findAllByTrxDate(LocalDate.parse(createdDate));
         ArrayList<GetReportDTO> response = new ArrayList<>();
 
@@ -158,26 +158,16 @@ public class TransactionService {
                         getReportDTO.setUsername(o.toString());
                         getReportDTO.setBalanceChangeDate(LocalDate.parse(createdDate));
                     }
-
-//                    getReportDTO.setChangeInPercentage(calculateAverage(saldo));
                 }
                 System.out.println(balance);
                 var firstBalance = balance.get(0);
                 var lastBalance = balance.get(balance.size() - 1);
                 var changeBalance = lastBalance.subtract(firstBalance);
-                getReportDTO.setChangeInPercentage(changeBalance.divide(lastBalance, RoundingMode.DOWN).toString() + "%");
+                getReportDTO.setChangeInPercentage(changeBalance.divide(lastBalance, RoundingMode.DOWN) + "%");
                 response.add(getReportDTO);
             }
-            Map<String, List<GetReportDTO>> collect1 = response.stream().collect(Collectors.groupingBy(GetReportDTO::getUsername));
 
-
-            return collect1;
+            return response;
         }
-    }
-
-    private double calculateSum(ArrayList <BigDecimal> marks) {
-        return marks.stream()
-                .mapToDouble(BigDecimal::doubleValue)
-                .sum();
     }
 }
