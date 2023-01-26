@@ -51,7 +51,7 @@ public class UserService {
         if (userModel != null){
             userDTO = modelMapper.map(userModel, UserDTO.class);
         } else {
-            throw new Exception("Id tidak ditemukan");
+            throw new Exception("Username tidak ditemukan");
         }
         return userDTO;
     }

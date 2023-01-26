@@ -14,6 +14,6 @@ public class CreateDTO {
     private int trxId;
     private String originUsername;
     private String destinationUsername;
-    private BigDecimal amount;
+    private String amount;
     private String status;
 }

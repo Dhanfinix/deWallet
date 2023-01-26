@@ -38,14 +38,16 @@ public class TransactionService {
 
     public CreateDTO createDTO(String username, String password, String destinationUsername, BigDecimal amount) throws Exception{
         UserModel sender = userRepository.findByUsername(username);
-        UserModel recipient = userRepository.findByUsername(destinationUsername);
-        var attempt = sender.getPasswordAttempt();
         TransactionModel transactionSender = new TransactionModel();
+        TransactionModel transactionTax = new TransactionModel();
         TransactionModel transactionRecipient = new TransactionModel();
-        if (sender.getUsername().isEmpty()){
+        if (sender == null){
             throw new Exception("Tidak ditemukan username pengirim");
-        } else if (!sender.getPassword().equals(password)){
-            if (attempt>3){
+        }
+        var attempt = sender.getPasswordAttempt();
+
+        if (!sender.getPassword().equals(password)){
+            if (attempt==3){
                 sender.setBanned(true);
                 throw new Exception("Akun anda terblokir");
             }
@@ -53,7 +55,11 @@ public class TransactionService {
             throw new Exception("Password salah");
         } else if (sender.isBanned()){
             throw new Exception("Akun anda terblokir");
-        } else if (recipient.getUsername().isEmpty()){
+        }
+
+        UserModel recipient = userRepository.findByUsername(destinationUsername);
+
+        if (recipient == null){
             throw new Exception("Tidak ditemukan username penerima");
         } else if (amount.compareTo(BigDecimal.valueOf(0)) <0){
             throw new Exception("Top up gagal karena bernilai negatif");
@@ -69,29 +75,40 @@ public class TransactionService {
         }
 
         sender.setPasswordAttempt(0);
-        var newAmount = amount.subtract(amount.multiply(BigDecimal.valueOf(Constant.TRANSACTION_TAX)));
+        //TODO: TAX HANYA UNTUK SENDER, JADI DILUAR AMOUNT YANG DIKIRIM, SEPERTI BIAYA ADMIN
+        var tax = amount.multiply(BigDecimal.valueOf(Constant.TRANSACTION_TAX));        //jumlah tax
+        var newAmount = amount.add(tax);   //amount setelah potong tax
 
+        //sender
         transactionSender.setUsername(username);
-        transactionSender.setAmount(newAmount.negate());
+        transactionSender.setAmount(amount);
         transactionSender.setStatus(Constant.SETTLED);
         transactionSender.setTrxDate(LocalDate.now());
         transactionSender.setBalanceBefore(sender.getBalance());
 
         sender.setBalance(sender.getBalance().subtract(newAmount));       //mengurangi saldo sender
         transactionSender.setBalanceAfter(sender.getBalance());
-        ////
+
+        //sender tx, catat transaksi khusus tax
+        transactionTax.setUsername(username);
+        transactionTax.setAmount(tax);
+        transactionTax.setStatus(Constant.SETTLED);
+        transactionTax.setTrxDate(LocalDate.now());
+
+        //recipient
         transactionRecipient.setUsername(destinationUsername);
-        transactionRecipient.setAmount(newAmount);
+        transactionRecipient.setAmount(amount);
         transactionRecipient.setStatus(Constant.SETTLED);
         transactionRecipient.setTrxDate(LocalDate.now());
         transactionRecipient.setBalanceBefore(recipient.getBalance());
 
-        recipient.setBalance(recipient.getBalance().add(newAmount));       //menambah saldo recipient
+        recipient.setBalance(recipient.getBalance().add(amount));       //menambah saldo recipient
         transactionRecipient.setBalanceAfter(recipient.getBalance());
 
         transactionSender.setUserModel(sender);
+        transactionTax.setUserModel(sender);
         transactionRecipient.setUserModel(recipient);
-        transactionRepository.saveAll(List.of(transactionSender, transactionRecipient));
+        transactionRepository.saveAll(List.of(transactionSender, transactionTax, transactionRecipient));
 
         //COBA HAPUS, KAN UDAH SET USER DI TRANSACTION, yup bisa dihapus
 //        userRepository.save(sender);
@@ -100,7 +117,7 @@ public class TransactionService {
                 .trxId(transactionSender.getTrxId())
                 .originUsername(sender.getUsername())
                 .destinationUsername(recipient.getUsername())
-                .amount(newAmount.divide(BigDecimal.valueOf(1000), RoundingMode.DOWN))     //Pembulatan kebawah
+                .amount(currencyFormat(amount, new Locale("in", "ID")))
                 .status(Constant.SETTLED)
                 .build();
     }
@@ -114,7 +131,7 @@ public class TransactionService {
         }
         var attempt = userModel.getPasswordAttempt();
         if (!userModel.getPassword().equals(password)){
-            if (attempt>3){
+            if (attempt==3){
                 userModel.setBanned(true);
                 throw new Exception("Password salah tiga kali, akun terkunci");
             }
