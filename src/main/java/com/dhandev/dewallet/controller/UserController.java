@@ -79,7 +79,7 @@ public class UserController {
     }
 
     //DONE Change user password, it should be unique and not same with the old one
-    @PutMapping("/changepassword")
+    @PostMapping("/changepassword")
     public ResponseEntity<Object> changePassword(@RequestBody UserModel userModel){
         try{
             userService.changePassword(userModel);
