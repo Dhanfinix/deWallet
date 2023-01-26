@@ -39,7 +39,7 @@ public class ReportService {
                 GetReportDTO getReportDTO = new GetReportDTO();
                 ArrayList<BigDecimal> balanceAfter = new ArrayList<>();
                 ArrayList<BigDecimal> balanceBefore = new ArrayList<>();
-                for (var v = 0; v < result.toArray().length; v++) {        //for loop value/ transaksi
+                for (int v = 0; v < result.toArray().length; v++) {        //for loop value/ transaksi
                     if (result.get(v).getUsername().equals(o)) {    //jika username pada value sama dengan key
                         balanceAfter.add(result.get(v).getBalanceAfter());
                         balanceBefore.add(result.get(v).getBalanceBefore());
@@ -48,9 +48,9 @@ public class ReportService {
                     }
                 }
                 System.out.println(balanceAfter);
-                var firstBalance = balanceBefore.get(0).doubleValue();    //final balance of d-1
-                var lastBalance = balanceAfter.get(balanceAfter.size() - 1).doubleValue();    //final balance from last transaction of today
-                var changeBalance = lastBalance - firstBalance;
+                Double firstBalance = balanceBefore.get(0).doubleValue();    //final balance of d-1
+                Double lastBalance = balanceAfter.get(balanceAfter.size() - 1).doubleValue();    //final balance from last transaction of today
+                Double changeBalance = lastBalance - firstBalance;
                 getReportDTO.setChangeInPercentage(String.format("%,.2f", changeBalance/firstBalance*100) + "%");
                 response.add(getReportDTO);
             }

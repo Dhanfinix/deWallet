@@ -44,7 +44,7 @@ public class TransactionService {
         if (sender == null){
             throw new Exception("Tidak ditemukan username pengirim");
         }
-        var attempt = sender.getPasswordAttempt();
+        int attempt = sender.getPasswordAttempt();
 
         if (!sender.getPassword().equals(password)){
             if (attempt==3){
@@ -64,19 +64,19 @@ public class TransactionService {
         } else if (amount.compareTo(BigDecimal.valueOf(0)) <0){
             throw new Exception("Top up gagal karena bernilai negatif");
         } else if (sender.getTransactionLimit().compareTo(amount) < 0){     //Jika limit lebih besar dari amount, lempar eror
-            var limit = sender.getTransactionLimit();
+            BigDecimal limit = sender.getTransactionLimit();
             currencyFormat(limit, new Locale("in", "ID"));
             throw new Exception("Jumlah melewati limit saat ini yaitu: " + limit);
         } else if (sender.getBalance().add(Constant.MIN_BALANCE).compareTo(amount) < 0){          //balance kurang
             throw new Exception("Saldo kurang untuk melakukan transaksi");
         } else if (Constant.MIN_TRANSACTION.compareTo(amount) > 0){         //transaksi harus lebih besar daripada batas minimal
-            var min_trx = Constant.MIN_TRANSACTION;
+            BigDecimal min_trx = Constant.MIN_TRANSACTION;
             throw new Exception("Minimum transaksi adalah: " + min_trx);
         }
 
         sender.setPasswordAttempt(0);
-        var tax = amount.multiply(BigDecimal.valueOf(Constant.TRANSACTION_TAX));        //jumlah tax
-        var newAmount = amount.add(tax);   //amount setelah potong tax
+        BigDecimal tax = amount.multiply(BigDecimal.valueOf(Constant.TRANSACTION_TAX));        //jumlah tax
+        BigDecimal newAmount = amount.add(tax);   //amount setelah potong tax
 
         //sender
         transactionSender.setUsername(username);
@@ -127,11 +127,11 @@ public class TransactionService {
     public void topUp(String username, String password, BigDecimal amount) throws Exception{
         UserModel userModel = userRepository.findByUsername(username);
         TransactionModel transaction = new TransactionModel();
-        var maxTopUp = Constant.MAX_TOPUP;
+        BigDecimal maxTopUp = Constant.MAX_TOPUP;
         if (userModel == null) {
             throw new Exception("Username tidak ditemukan");
         }
-        var attempt = userModel.getPasswordAttempt();
+        int attempt = userModel.getPasswordAttempt();
         if (!userModel.getPassword().equals(password)){
             if (attempt==3){
                 userModel.setBanned(true);

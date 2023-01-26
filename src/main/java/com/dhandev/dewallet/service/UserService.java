@@ -3,6 +3,7 @@ package com.dhandev.dewallet.service;
 import com.dhandev.dewallet.constant.Constant;
 import com.dhandev.dewallet.dto.BalanceLimitDTO;
 import com.dhandev.dewallet.dto.UserDTO;
+import com.dhandev.dewallet.mapper.UserMapper;
 import com.dhandev.dewallet.model.UserModel;
 import com.dhandev.dewallet.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -23,6 +24,9 @@ public class UserService {
     private UserRepository userRepository;
     @Autowired
     private ModelMapper modelMapper;
+    @Autowired
+    private UserMapper userMapper;
+
     public UserModel register(String name, String password) throws Exception {
         UserModel userModel = new UserModel();
         if (name.isEmpty()){
@@ -49,7 +53,7 @@ public class UserService {
         UserModel userModel = userRepository.findByUsername(username);
         UserDTO userDTO;
         if (userModel != null){
-            userDTO = modelMapper.map(userModel, UserDTO.class);
+            userDTO = userMapper.toUserDto(userModel);
         } else {
             throw new Exception("Username tidak ditemukan");
         }
@@ -77,8 +81,10 @@ public class UserService {
         if (userModel == null){
             throw new Exception("Username tidak ditemukan");
         } else {
-            balanceLimitDTO.setBalance(currencyFormat(userModel.getBalance(), new Locale("in", "ID")));
-            balanceLimitDTO.setTransactionLimit(currencyFormat(userModel.getTransactionLimit(), new Locale("in", "ID")));
+//            balanceLimitDTO.setBalance(currencyFormat(userModel.getBalance(), new Locale("in", "ID")));
+//            balanceLimitDTO.setTransactionLimit(currencyFormat(userModel.getTransactionLimit(), new Locale("in", "ID")));
+            //use mapper cannot implement currency format
+            balanceLimitDTO = userMapper.toBalanceLimitDto(userModel);
         }
         return balanceLimitDTO;
     }
