@@ -23,4 +23,9 @@ public class Constant {
     public static final String REGEX_PASSWORD = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[!@#&()–[{}]:;',?/*~$^+=<>]).{10,}$";
 
     public static final String REGEX_KTP = "^[0-9]{1,16}$";     //only number, length min 1 max 16
+
+    public static final String TYPE_SENDER = "SENDER";
+    public static final String TYPE_SENDER_TAX = "TAX";
+    public static final String TYPE_RECIPIENT = "RECIPIENT";
+    public static final String TYPE_TOPUP = "TOPUP";
 }

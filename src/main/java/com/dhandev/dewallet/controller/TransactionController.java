@@ -40,13 +40,5 @@ public class TransactionController {
         }
     }
 
-    @GetMapping("/report/getReport/{date}")
-    public ResponseEntity<Object> getReport(@PathVariable String date){
-        try{
-            var result = transactionService.getReport(date);
-            return ResponseHandler.generateResponse("Berikut report pada tanggal yang diminta", HttpStatus.OK, result);
-        } catch (Exception e){
-            return ResponseHandler.generateResponse(e.getMessage(), HttpStatus.BAD_REQUEST, null);
-        }
-    }
+
 }

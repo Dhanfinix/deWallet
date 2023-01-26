@@ -41,4 +41,7 @@ public class TransactionModel extends AbstractAuditingEntity {
     @Column
     public BigDecimal balanceBefore;
 
+    @Column
+    public String type;
+
 }

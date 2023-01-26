@@ -75,7 +75,6 @@ public class TransactionService {
         }
 
         sender.setPasswordAttempt(0);
-        //TODO: TAX HANYA UNTUK SENDER, JADI DILUAR AMOUNT YANG DIKIRIM, SEPERTI BIAYA ADMIN
         var tax = amount.multiply(BigDecimal.valueOf(Constant.TRANSACTION_TAX));        //jumlah tax
         var newAmount = amount.add(tax);   //amount setelah potong tax
 
@@ -85,6 +84,7 @@ public class TransactionService {
         transactionSender.setStatus(Constant.SETTLED);
         transactionSender.setTrxDate(LocalDate.now());
         transactionSender.setBalanceBefore(sender.getBalance());
+        transactionSender.setType(Constant.TYPE_SENDER);
 
         sender.setBalance(sender.getBalance().subtract(newAmount));       //mengurangi saldo sender
         transactionSender.setBalanceAfter(sender.getBalance());
@@ -94,6 +94,7 @@ public class TransactionService {
         transactionTax.setAmount(tax);
         transactionTax.setStatus(Constant.SETTLED);
         transactionTax.setTrxDate(LocalDate.now());
+        transactionTax.setType(Constant.TYPE_SENDER_TAX);
 
         //recipient
         transactionRecipient.setUsername(destinationUsername);
@@ -101,6 +102,7 @@ public class TransactionService {
         transactionRecipient.setStatus(Constant.SETTLED);
         transactionRecipient.setTrxDate(LocalDate.now());
         transactionRecipient.setBalanceBefore(recipient.getBalance());
+        transactionRecipient.setType(Constant.TYPE_RECIPIENT);
 
         recipient.setBalance(recipient.getBalance().add(amount));       //menambah saldo recipient
         transactionRecipient.setBalanceAfter(recipient.getBalance());
@@ -154,6 +156,7 @@ public class TransactionService {
         transaction.setUserModel(userModel);
         transaction.setTrxDate(LocalDate.now());
         transaction.setBalanceBefore(userModel.getBalance());
+        transaction.setType(Constant.TYPE_TOPUP);
 
         userModel.setBalance(userModel.getBalance().add(amount));
         transaction.setBalanceAfter(userModel.getBalance());
@@ -161,38 +164,5 @@ public class TransactionService {
         transactionRepository.save(transaction);
     }
 
-    public List<GetReportDTO> getReport(String createdDate) throws Exception {
-        List<TransactionModel> result = transactionRepository.findAllByTrxDate(LocalDate.parse(createdDate));
-        ArrayList<GetReportDTO> response = new ArrayList<>();
 
-        if (result.isEmpty()){
-            throw new Exception("Report tidak ditemukan");
-        } else{
-            Map<String, List<TransactionModel>> collect = result.stream().collect(Collectors.groupingBy(TransactionModel::getUsername));
-            Object[] key = collect.keySet().toArray();
-
-            System.out.println(collect.keySet());
-            for (Object o : key) {                         //for loop key/ user
-                GetReportDTO getReportDTO = new GetReportDTO();
-                ArrayList<BigDecimal> balanceAfter = new ArrayList<>();
-                ArrayList<BigDecimal> balanceBefore = new ArrayList<>();
-                for (var v = 0; v < result.toArray().length; v++) {        //for loop value/ transaksi
-                    if (result.get(v).getUsername().equals(o)) {    //jika username pada value sama dengan key
-                        balanceAfter.add(result.get(v).getBalanceAfter());
-                        balanceBefore.add(result.get(v).getBalanceBefore());
-                        getReportDTO.setUsername(o.toString());
-                        getReportDTO.setBalanceChangeDate(LocalDate.parse(createdDate));
-                    }
-                }
-                System.out.println(balanceAfter);
-                var firstBalance = balanceBefore.get(0).doubleValue();    //final balance of d-1
-                var lastBalance = balanceAfter.get(balanceAfter.size() - 1).doubleValue();    //final balance from last transaction of today
-                var changeBalance = lastBalance - firstBalance;
-                getReportDTO.setChangeInPercentage(String.format("%,.2f", changeBalance/firstBalance*100) + "%");
-                response.add(getReportDTO);
-            }
-
-            return response;
-        }
-    }
 }
