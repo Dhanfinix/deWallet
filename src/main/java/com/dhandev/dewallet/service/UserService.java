@@ -3,6 +3,9 @@ package com.dhandev.dewallet.service;
 import com.dhandev.dewallet.constant.Constant;
 import com.dhandev.dewallet.dto.BalanceLimitDTO;
 import com.dhandev.dewallet.dto.UserDTO;
+import com.dhandev.dewallet.dto.request.AddKtpDTO;
+import com.dhandev.dewallet.dto.request.ChangePassDTO;
+import com.dhandev.dewallet.dto.request.RegistDTO;
 import com.dhandev.dewallet.mapper.UserMapper;
 import com.dhandev.dewallet.model.UserModel;
 import com.dhandev.dewallet.repository.UserRepository;
@@ -27,19 +30,20 @@ public class UserService {
     @Autowired
     private UserMapper userMapper;
 
-    public UserModel register(String name, String password) throws Exception {
-        UserModel userModel = new UserModel();
-        if (name.isEmpty()){
+    public UserModel register(RegistDTO registDTO) throws Exception {
+        UserModel userModel;
+        if (registDTO.getUsername().isEmpty()){
             throw new Exception("Nama tidak boleh kosong ");
-        } else if (!userRepository.findByUsernameEquals(name).isEmpty()){
+        } else if (!userRepository.findByUsernameEquals(registDTO.getUsername()).isEmpty()){
             throw new Exception("Nama sudah digunakan");
-        } else if (!password.matches(Constant.REGEX_PASSWORD)){
+        } else if (!registDTO.getPassword().matches(Constant.REGEX_PASSWORD)){
             throw new Exception("Password minimal terdiri dari 10 karakter dengan angka, huruf kapital dan kecil");
         } else {
-            userModel.setUsername(name);
-            userModel.setBalance(Constant.MIN_BALANCE);            //TODO: DELETE LATER
+//            userModel.setUsername(name);
+//            userModel.setPassword(password);
+            userModel = userMapper.RegisToUserModel(registDTO);
+            userModel.setBalance(BigDecimal.valueOf(0));            //TODO: DELETE LATER
             userModel.setTransactionLimit(Constant.MAX_TRANSACTION);
-            userModel.setPassword(password);
         }
         return userRepository.save(userModel);
     }
@@ -60,16 +64,19 @@ public class UserService {
         return userDTO;
     }
 
-    public UserModel updateKtp(String name, UserModel um) throws Exception {
+    public UserModel updateKtp(String name, AddKtpDTO addKtpDTO) throws Exception {
         UserModel userModel = userRepository.findByUsername(name);
+
         if (userModel == null){
             throw new Exception("Username tidak ditemukan");
-        } else if (!um.getKtp().matches(Constant.REGEX_KTP)){
+        } else if (!addKtpDTO.getKtp().matches(Constant.REGEX_KTP)){
             throw new Exception("Nomor KTP harus 16 digit dan tidak mengandung huruf");
-        } else if (!userRepository.findByKtpEquals(um.getKtp()).isEmpty()){  //bandingkan input dengan database
+        } else if (!userRepository.findByKtpEquals(addKtpDTO.getKtp()).isEmpty()){  //bandingkan input dengan database
             throw new Exception("Nomor KTP sudah digunakan");
         } else {
-            userModel.setKtp(um.getKtp());
+//            userModel.setKtp(addKtpDTO.getKtp());
+            addKtpDTO.setId(userModel.getId());
+            userModel = userMapper.AddKtpToUserModel(addKtpDTO, userModel);
             userModel.setTransactionLimit(Constant.MAX_TRANSACTION_WITH_KTP);
         }
         return userRepository.save(userModel);
@@ -100,20 +107,21 @@ public class UserService {
         return userRepository.save(userModel);
     }
 
-    public UserModel changePassword(UserModel um) throws Exception{
-        UserModel userModel = userRepository.findByUsername(um.getUsername());
+    public UserModel changePassword(ChangePassDTO changePassDTO) throws Exception{
+        UserModel userModel = userRepository.findByUsername(changePassDTO.getUsername());
         if (userModel == null) {
             throw new Exception("Username tidak ditemukan");
         }
         String oldPass = userModel.getPassword();   //dari database
-        String newPass = um.getPassword();          //dari input
+        String newPass = changePassDTO.getPassword();          //dari input
         if (newPass.equals(oldPass)){
             throw new Exception("Password baru sama dengan password lama");
         } else if (!newPass.matches(Constant.REGEX_PASSWORD)){
             throw new Exception("Password minimal terdiri dari 10 karakter dengan angka, huruf kapital dan kecil, serta simbol");
         } else {
-            userModel.setOldPassword(oldPass);          //set oldPass dari pass saat ini
-            userModel.setPassword(newPass);            //set pass dari pass baru
+//            userModel.setOldPassword(oldPass);          //set oldPass dari pass saat ini
+//            userModel.setPassword(newPass);            //set pass dari pass baru
+            userMapper.ChangePassToUserModel(changePassDTO, userModel);
         }
         return userRepository.save(userModel);
     }

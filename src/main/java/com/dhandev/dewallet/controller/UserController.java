@@ -2,6 +2,9 @@ package com.dhandev.dewallet.controller;
 
 import com.dhandev.dewallet.dto.BalanceLimitDTO;
 import com.dhandev.dewallet.dto.UserDTO;
+import com.dhandev.dewallet.dto.request.AddKtpDTO;
+import com.dhandev.dewallet.dto.request.ChangePassDTO;
+import com.dhandev.dewallet.dto.request.RegistDTO;
 import com.dhandev.dewallet.model.UserModel;
 import com.dhandev.dewallet.response.ResponseHandler;
 import com.dhandev.dewallet.service.UserService;
@@ -23,9 +26,9 @@ public class UserController {
 
     //DONE register with unique username and password validation
     @PostMapping("/registration")
-    public ResponseEntity<Object> register(@RequestBody UserModel userModel){
+    public ResponseEntity<Object> register(@RequestBody RegistDTO registDTO){
         try {
-            userService.register(userModel.getUsername(), userModel.getPassword());
+            userService.register(registDTO);
             return ResponseHandler.generateResponse("Berhasil Mendaftar", HttpStatus.OK, null);
         } catch (Exception e){
             return ResponseHandler.generateResponse(e.getMessage(), HttpStatus.BAD_REQUEST, null);
@@ -47,9 +50,9 @@ public class UserController {
 
     //DONE change or add ktp to account based on its username and no same ktp
     @PutMapping("/{username}/addktp")
-    public ResponseEntity<Object> addKtp(@PathVariable String username, @RequestBody UserModel um){
+    public ResponseEntity<Object> addKtp(@PathVariable String username, @RequestBody AddKtpDTO addKtpDTO){
         try {
-            UserModel result = userService.updateKtp(username, um);
+            UserModel result = userService.updateKtp(username, addKtpDTO);
             return ResponseHandler.generateResponse("OK", HttpStatus.OK, null);
         } catch (Exception e){
             return ResponseHandler.generateResponse(e.getMessage(), HttpStatus.BAD_REQUEST, null);
@@ -80,9 +83,9 @@ public class UserController {
 
     //DONE Change user password, it should be unique and not same with the old one
     @PostMapping("/changepassword")
-    public ResponseEntity<Object> changePassword(@RequestBody UserModel userModel){
+    public ResponseEntity<Object> changePassword(@RequestBody ChangePassDTO changePassDTO){
         try{
-            userService.changePassword(userModel);
+            userService.changePassword(changePassDTO);
             return ResponseHandler.generateResponse("OK", HttpStatus.OK, null);
         } catch (Exception e){
             return ResponseHandler.generateResponse(e.getMessage(), HttpStatus.BAD_REQUEST, null);

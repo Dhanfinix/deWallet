@@ -86,15 +86,19 @@ public class TransactionService {
         transactionSender.setBalanceBefore(sender.getBalance());
         transactionSender.setType(Constant.TYPE_SENDER);
 
-        sender.setBalance(sender.getBalance().subtract(newAmount));       //mengurangi saldo sender
-        transactionSender.setBalanceAfter(sender.getBalance());
+        sender.setBalance(sender.getBalance().subtract(amount));       //mengurangi saldo sender dari amount untuk userdatabase
 
-        //sender tx, catat transaksi khusus tax
+        //sender tax, catat transaksi khusus tax
         transactionTax.setUsername(username);
         transactionTax.setAmount(tax);
         transactionTax.setStatus(Constant.SETTLED);
         transactionTax.setTrxDate(LocalDate.now());
         transactionTax.setType(Constant.TYPE_SENDER_TAX);
+        transactionTax.setBalanceBefore(sender.getBalance());
+        transactionTax.setBalanceAfter(sender.getBalance().subtract(tax));
+
+        transactionSender.setBalanceAfter(sender.getBalance());
+
 
         //recipient
         transactionRecipient.setUsername(destinationUsername);
@@ -141,8 +145,8 @@ public class TransactionService {
             throw new Exception("Password salah");
         } else if (userModel.isBanned()){
             throw new Exception("Akun anda terblokir");
-        } else if (amount.compareTo(BigDecimal.valueOf(0)) <0){
-            throw new Exception("Top up gagal karena bernilai negatif");
+        } else if (amount.compareTo(BigDecimal.valueOf(0)) <= 0){
+            throw new Exception("Top up gagal karena bernilai negatif atau nol");
         } else if (maxTopUp.compareTo(amount) < 0){
             throw new Exception("Jumlah melebihi nilai topup maksimum sebesar: " + maxTopUp);
         } else if (userModel.getBalance().add(amount).compareTo(Constant.MAX_BALANCE) > 0){
