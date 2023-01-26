@@ -11,7 +11,7 @@ public interface UserMapper {
 
     UserDTO toUserDto(UserModel userModel);
 
-    @Mapping(target = "balance", source = "balance")
-    @Mapping(target = "transactionLimit", source = "transactionLimit")
+    @Mapping(target = "balance", source = "balance", numberFormat = "Rp###,###")
+    @Mapping(target = "transactionLimit", source = "transactionLimit", numberFormat = "Rp###,###")
     BalanceLimitDTO toBalanceLimitDto(UserModel userModel);
 }
