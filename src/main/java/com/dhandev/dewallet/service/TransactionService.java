@@ -41,6 +41,9 @@ public class TransactionService {
         TransactionModel transactionSender = new TransactionModel();
         TransactionModel transactionTax = new TransactionModel();
         TransactionModel transactionRecipient = new TransactionModel();
+        BigDecimal tax = amount.multiply(BigDecimal.valueOf(Constant.TRANSACTION_TAX));        //jumlah tax
+        BigDecimal newAmount = amount.add(tax);   //amount setelah tambah tax
+
         if (sender == null){
             throw new Exception("Tidak ditemukan username pengirim");
         }
@@ -67,7 +70,7 @@ public class TransactionService {
             BigDecimal limit = sender.getTransactionLimit();
             currencyFormat(limit, new Locale("in", "ID"));
             throw new Exception("Jumlah melewati limit saat ini yaitu: " + limit);
-        } else if (sender.getBalance().add(Constant.MIN_BALANCE).compareTo(amount) < 0){          //balance kurang
+        } else if (sender.getBalance().add(Constant.MIN_BALANCE).compareTo(newAmount) < 0){          //balance kurang
             throw new Exception("Saldo kurang untuk melakukan transaksi");
         } else if (Constant.MIN_TRANSACTION.compareTo(amount) > 0){         //transaksi harus lebih besar daripada batas minimal
             BigDecimal min_trx = Constant.MIN_TRANSACTION;
@@ -75,8 +78,6 @@ public class TransactionService {
         }
 
         sender.setPasswordAttempt(0);
-        BigDecimal tax = amount.multiply(BigDecimal.valueOf(Constant.TRANSACTION_TAX));        //jumlah tax
-        BigDecimal newAmount = amount.add(tax);   //amount setelah potong tax
 
         //sender
         transactionSender.setUsername(username);
