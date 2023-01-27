@@ -51,7 +51,12 @@ public class ReportService {
                 Double firstBalance = balanceBefore.get(0).doubleValue();    //final balance of d-1
                 Double lastBalance = balanceAfter.get(balanceAfter.size() - 1).doubleValue();    //final balance from last transaction of today
                 Double changeBalance = lastBalance - firstBalance;
-                getReportDTO.setChangeInPercentage(String.format("%,.2f", changeBalance/firstBalance*100) + "%");
+                Double percentage = changeBalance/firstBalance*100;
+                if (percentage.isInfinite()){
+                    getReportDTO.setChangeInPercentage("-");
+                } else {
+                    getReportDTO.setChangeInPercentage(String.format("%,.2f", percentage) + "%");
+                }
                 response.add(getReportDTO);
             }
 
