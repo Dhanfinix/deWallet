@@ -2,6 +2,7 @@ package com.dhandev.dewallet.service;
 
 import com.dhandev.dewallet.dto.GetReportDTO;
 import com.dhandev.dewallet.model.TransactionModel;
+import com.dhandev.dewallet.model.UserModel;
 import com.dhandev.dewallet.repository.TransactionRepository;
 import com.dhandev.dewallet.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -13,10 +14,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -30,6 +28,7 @@ public class ReportService {
 
     public List<GetReportDTO> getReport(String createdDate) throws Exception {
         List<TransactionModel> result = transactionRepository.findAllByTrxDate(LocalDate.parse(createdDate));
+        Iterable<UserModel> noReport = userRepository.findAll();
         ArrayList<GetReportDTO> response = new ArrayList<>();
 
         if (result.isEmpty()){
@@ -37,11 +36,12 @@ public class ReportService {
         } else{
             Map<String, List<TransactionModel>> collect = result.stream().collect(Collectors.groupingBy(TransactionModel::getUsername));
             Object[] key = collect.keySet().toArray();
+            List<Object> listKey = Arrays.asList(key);
             //TODO: SHOW ALL USER REPORT EVEN THEY NOT DOING ANY TRANSACTION!
             System.out.println(collect.keySet());
 
             List<GetReportDTO> reportDTOS = new ArrayList<>();
-
+            DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("dd MMM yyyy");
             //With forEach
             collect.forEach((user, transaksi) -> {
                 GetReportDTO getReportDTO = new GetReportDTO();
@@ -51,9 +51,20 @@ public class ReportService {
                 Double changeBalance = last-first;
                 getReportDTO.setChangeInPercentage(String.format("%,.2f", changeBalance/first*100) + "%");
                 getReportDTO.setUsername(user);
-                DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("dd MMM yyyy");
+                
                 getReportDTO.setBalanceChangeDate(LocalDate.parse(createdDate).format(dateFormat));
                 reportDTOS.add(getReportDTO);
+            });
+
+            System.out.println("\t this is the key string "+ Arrays.toString(key));
+            noReport.forEach((user) -> {
+                if (!listKey.contains(user.getUsername())){
+                    GetReportDTO getNoReport = new GetReportDTO();
+                    getNoReport.setUsername(user.getUsername());
+                    getNoReport.setChangeInPercentage("0%");
+                    getNoReport.setBalanceChangeDate(LocalDate.parse(createdDate).format(dateFormat));
+                    reportDTOS.add(getNoReport);
+                }
             });
 
             //With manually per key and per value
