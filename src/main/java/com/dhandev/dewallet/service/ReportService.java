@@ -9,8 +9,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -33,29 +37,48 @@ public class ReportService {
         } else{
             Map<String, List<TransactionModel>> collect = result.stream().collect(Collectors.groupingBy(TransactionModel::getUsername));
             Object[] key = collect.keySet().toArray();
-
+            //TODO: SHOW ALL USER REPORT EVEN THEY NOT DOING ANY TRANSACTION!
             System.out.println(collect.keySet());
-            for (Object o : key) {                         //for loop key/ user
-                GetReportDTO getReportDTO = new GetReportDTO();
-                ArrayList<BigDecimal> balanceAfter = new ArrayList<>();
-                ArrayList<BigDecimal> balanceBefore = new ArrayList<>();
-                for (int v = 0; v < result.toArray().length; v++) {        //for loop value/ transaksi
-                    if (result.get(v).getUsername().equals(o)) {    //jika username pada value sama dengan key
-                        balanceAfter.add(result.get(v).getBalanceAfter());
-                        balanceBefore.add(result.get(v).getBalanceBefore());
-                        getReportDTO.setUsername(o.toString());
-                        getReportDTO.setBalanceChangeDate(LocalDate.parse(createdDate));
-                    }
-                }
-                System.out.println(balanceAfter);
-                Double firstBalance = balanceBefore.get(0).doubleValue();    //final balance of d-1
-                Double lastBalance = balanceAfter.get(balanceAfter.size() - 1).doubleValue();    //final balance from last transaction of today
-                Double changeBalance = lastBalance - firstBalance;
-                getReportDTO.setChangeInPercentage(String.format("%,.2f", changeBalance/firstBalance*100) + "%");
-                response.add(getReportDTO);
-            }
 
-            return response;
+            List<GetReportDTO> reportDTOS = new ArrayList<>();
+
+            //With forEach
+            collect.forEach((user, transaksi) -> {
+                GetReportDTO getReportDTO = new GetReportDTO();
+                Double first = transaksi.get(0).getBalanceBefore().doubleValue();
+                Double last = transaksi.get(transaksi.size() - 1).getBalanceAfter().doubleValue();
+
+                Double changeBalance = last-first;
+                getReportDTO.setChangeInPercentage(String.format("%,.2f", changeBalance/first*100) + "%");
+                getReportDTO.setUsername(user);
+                DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("dd MMM yyyy");
+                getReportDTO.setBalanceChangeDate(LocalDate.parse(createdDate).format(dateFormat));
+                reportDTOS.add(getReportDTO);
+            });
+
+            //With manually per key and per value
+//            for (Object o : key) {                         //for loop key/ user
+//                GetReportDTO getReportDTO = new GetReportDTO();
+//                ArrayList<BigDecimal> balanceAfter = new ArrayList<>();
+//                ArrayList<BigDecimal> balanceBefore = new ArrayList<>();
+//                for (int v = 0; v < result.toArray().length; v++) {        //for loop value/ transaksi
+//                    if (result.get(v).getUsername().equals(o)) {    //jika username pada value sama dengan key
+//                        balanceAfter.add(result.get(v).getBalanceAfter());
+//                        balanceBefore.add(result.get(v).getBalanceBefore());
+//                        getReportDTO.setUsername(o.toString());
+//                        DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("dd MMM yyyy");
+//                        getReportDTO.setBalanceChangeDate(LocalDate.parse(createdDate).format(dateFormat));
+//                    }
+//                }
+//                System.out.println(balanceAfter);
+//                Double firstBalance = balanceBefore.get(0).doubleValue();    //final balance of d-1
+//                Double lastBalance = balanceAfter.get(balanceAfter.size() - 1).doubleValue();    //final balance from last transaction of today
+//                Double changeBalance = lastBalance - firstBalance;
+//                getReportDTO.setChangeInPercentage(String.format("%,.2f", changeBalance/firstBalance*100) + "%");
+//                response.add(getReportDTO);
+//            }
+
+            return reportDTOS;
         }
     }
 }

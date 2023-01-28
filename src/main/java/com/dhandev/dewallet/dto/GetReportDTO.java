@@ -11,5 +11,5 @@ import java.util.Date;
 public class GetReportDTO {
     private String username;
     private String changeInPercentage;
-    private LocalDate balanceChangeDate;
+    private String balanceChangeDate;
 }
