@@ -114,6 +114,21 @@ public class UserService {
         }
         String oldPass = userModel.getPassword();   //dari database
         String newPass = changePassDTO.getPassword();          //dari input
+        int attempt = userModel.getPasswordAttempt();
+
+        //check old pass di database sama dengan old pass yang dideklarasikan di request body
+        if (!oldPass.equals(changePassDTO.getOldPassword())){
+            if (attempt==3){
+                userModel.setBanned(true);
+                throw new Exception("Akun anda terblokir");
+            }
+            userModel.setPasswordAttempt(attempt+1);
+            throw new Exception("Password salah");
+        } else if (userModel.isBanned()){
+            throw new Exception("Akun anda terblokir");
+        }
+
+        //check antar input old dan new harus beda
         if (newPass.equals(oldPass)){
             throw new Exception("Password baru sama dengan password lama");
         } else if (!newPass.matches(Constant.REGEX_PASSWORD)){
