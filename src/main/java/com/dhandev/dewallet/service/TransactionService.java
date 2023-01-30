@@ -101,7 +101,6 @@ public class TransactionService {
         transactionSender.setBalanceAfter(sender.getBalance());
         sender.setBalance(sender.getBalance().subtract(tax));       //mengurangi saldo sender dari tax untuk userdatabase
 
-
         //recipient
         transactionRecipient.setUsername(destinationUsername);
         transactionRecipient.setAmount(amount);

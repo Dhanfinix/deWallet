@@ -26,8 +26,9 @@ public class ReportService {
     @Autowired
     private UserRepository userRepository;
 
-    public List<GetReportDTO> getReport(String createdDate) throws Exception {
-        List<TransactionModel> result = transactionRepository.findAllByTrxDate(LocalDate.parse(createdDate));
+    //Get report from transaction table and check it with user table
+    public List<GetReportDTO> getReport(LocalDate createdDate) throws Exception {
+        List<TransactionModel> result = transactionRepository.findAllByTrxDate(createdDate);
         Iterable<UserModel> noReport = userRepository.findAll();
         ArrayList<GetReportDTO> response = new ArrayList<>();
 
@@ -37,7 +38,6 @@ public class ReportService {
             Map<String, List<TransactionModel>> collect = result.stream().collect(Collectors.groupingBy(TransactionModel::getUsername));
             Object[] key = collect.keySet().toArray();
             List<Object> listKey = Arrays.asList(key);
-            //TODO: SHOW ALL USER REPORT EVEN THEY NOT DOING ANY TRANSACTION!
             System.out.println(collect.keySet());
 
             List<GetReportDTO> reportDTOS = new ArrayList<>();
@@ -52,17 +52,19 @@ public class ReportService {
                 getReportDTO.setChangeInPercentage(String.format("%,.2f", changeBalance/first*100) + "%");
                 getReportDTO.setUsername(user);
                 
-                getReportDTO.setBalanceChangeDate(LocalDate.parse(createdDate).format(dateFormat));
+                getReportDTO.setBalanceChangeDate(createdDate.format(dateFormat));
                 reportDTOS.add(getReportDTO);
             });
 
             System.out.println("\t this is the key string "+ Arrays.toString(key));
+            //Add user with no transaction on given date
             noReport.forEach((user) -> {
+                //check every username that hasn't included in findByTrxdate
                 if (!listKey.contains(user.getUsername())){
                     GetReportDTO getNoReport = new GetReportDTO();
                     getNoReport.setUsername(user.getUsername());
                     getNoReport.setChangeInPercentage("0%");
-                    getNoReport.setBalanceChangeDate(LocalDate.parse(createdDate).format(dateFormat));
+                    getNoReport.setBalanceChangeDate(createdDate.format(dateFormat));
                     reportDTOS.add(getNoReport);
                 }
             });
@@ -91,5 +93,35 @@ public class ReportService {
 
             return reportDTOS;
         }
+    }
+
+    //Only get report from user table
+    public List<GetReportDTO> getTransactionByUser(LocalDate date){
+        Iterable<UserModel> userModel = userRepository.findAll();
+        List<GetReportDTO> reportDTOS = new ArrayList<>();
+        DateTimeFormatter dateFormat = DateTimeFormatter.ofPattern("dd MMM yyyy");
+
+        userModel.forEach(user -> {
+            double first;
+            double last;
+            double changeBalance;
+            GetReportDTO getReportDTO = new GetReportDTO();
+            List<TransactionModel> trxByDate = user.getTransaction().stream()
+                    .filter(t -> t.getTrxDate().equals(date))
+                    .collect(Collectors.toList());
+            if (!trxByDate.isEmpty()){
+                first = trxByDate.get(0).getBalanceBefore().doubleValue();
+                last = trxByDate.get(trxByDate.size() - 1).getBalanceAfter().doubleValue();
+                changeBalance = last-first;
+                getReportDTO.setChangeInPercentage(String.format("%,.2f", changeBalance/first*100) + "%");
+            } else {
+                getReportDTO.setChangeInPercentage("0%");
+            }
+            getReportDTO.setUsername(user.getUsername());
+            getReportDTO.setBalanceChangeDate(date.format(dateFormat));
+            reportDTOS.add(getReportDTO);
+        });
+
+        return reportDTOS;
     }
 }
