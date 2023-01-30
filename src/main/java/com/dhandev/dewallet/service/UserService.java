@@ -17,7 +17,6 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.text.NumberFormat;
 import java.util.Locale;
-import java.util.Optional;
 
 @Service
 @Transactional
@@ -30,7 +29,7 @@ public class UserService {
     @Autowired
     private UserMapper userMapper;
 
-    public UserModel register(RegistDTO registDTO) throws Exception {
+    public void register(RegistDTO registDTO) throws Exception {
         UserModel userModel;
         if (registDTO.getUsername().isEmpty()){
             throw new Exception("Nama tidak boleh kosong ");
@@ -39,13 +38,11 @@ public class UserService {
         } else if (!registDTO.getPassword().matches(Constant.REGEX_PASSWORD)){
             throw new Exception("Password minimal terdiri dari 10 karakter dengan angka, huruf kapital dan kecil");
         } else {
-//            userModel.setUsername(name);
-//            userModel.setPassword(password);
             userModel = userMapper.RegisToUserModel(registDTO);
-            userModel.setBalance(BigDecimal.valueOf(0));            //TODO: DELETE LATER
+            userModel.setBalance(BigDecimal.valueOf(0));
             userModel.setTransactionLimit(Constant.MAX_TRANSACTION);
         }
-        return userRepository.save(userModel);
+        userRepository.save(userModel);
     }
 
     public static String currencyFormat(BigDecimal value, Locale locale) {
@@ -74,7 +71,7 @@ public class UserService {
         } else if (!userRepository.findByKtpEquals(addKtpDTO.getKtp()).isEmpty()){  //bandingkan input dengan database
             throw new Exception("Nomor KTP sudah digunakan");
         } else {
-//            userModel.setKtp(addKtpDTO.getKtp());
+            //To update, need the same id to use mapper
             addKtpDTO.setId(userModel.getId());
             userModel = userMapper.AddKtpToUserModel(addKtpDTO, userModel);
             userModel.setTransactionLimit(Constant.MAX_TRANSACTION_WITH_KTP);
@@ -88,15 +85,12 @@ public class UserService {
         if (userModel == null){
             throw new Exception("Username tidak ditemukan");
         } else {
-//            balanceLimitDTO.setBalance(currencyFormat(userModel.getBalance(), new Locale("in", "ID")));
-//            balanceLimitDTO.setTransactionLimit(currencyFormat(userModel.getTransactionLimit(), new Locale("in", "ID")));
-            //use mapper cannot implement currency format
             balanceLimitDTO = userMapper.toBalanceLimitDto(userModel);
         }
         return balanceLimitDTO;
     }
 
-    public UserModel unBan(String name) throws Exception{
+    public void unBan(String name) throws Exception{
         UserModel userModel = userRepository.findByUsername(name);
         if (!userModel.getUsername().isEmpty()){
             userModel.setBanned(false);
@@ -104,10 +98,10 @@ public class UserService {
         } else {
             throw new Exception("Username tidak ditemukan");
         }
-        return userRepository.save(userModel);
+        userRepository.save(userModel);
     }
 
-    public UserModel changePassword(ChangePassDTO changePassDTO) throws Exception{
+    public void changePassword(ChangePassDTO changePassDTO) throws Exception{
         UserModel userModel = userRepository.findByUsername(changePassDTO.getUsername());
         if (userModel == null) {
             throw new Exception("Username tidak ditemukan");
@@ -134,11 +128,9 @@ public class UserService {
         } else if (!newPass.matches(Constant.REGEX_PASSWORD)){
             throw new Exception("Password minimal terdiri dari 10 karakter dengan angka, huruf kapital dan kecil, serta simbol");
         } else {
-//            userModel.setOldPassword(oldPass);          //set oldPass dari pass saat ini
-//            userModel.setPassword(newPass);            //set pass dari pass baru
             userMapper.ChangePassToUserModel(changePassDTO, userModel);
         }
-        return userRepository.save(userModel);
+        userRepository.save(userModel);
     }
 
 }

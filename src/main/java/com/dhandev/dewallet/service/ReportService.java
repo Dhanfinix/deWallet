@@ -23,7 +23,7 @@ public class ReportService {
     @Autowired
     private UserRepository userRepository;
 
-    //Only get report from user table
+    // get report only from user table
     public List<GetReportDTO> getReport(LocalDate date){
         Iterable<UserModel> userModel = userRepository.findAll();
         List<GetReportDTO> reportDTOS = new ArrayList<>();

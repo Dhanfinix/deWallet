@@ -69,7 +69,9 @@ public class TransactionService {
         } else if (sender.getTransactionLimit().compareTo(amount) < 0){     //Jika limit lebih besar dari amount, lempar eror
             BigDecimal limit = sender.getTransactionLimit();
             currencyFormat(limit, new Locale("in", "ID"));
-            throw new Exception("Jumlah melewati limit saat ini yaitu: " + limit);
+            throw new Exception("Jumlah melewati limit pengiriman saat ini yaitu: " + limit);
+        } else if (recipient.getBalance().add(amount).compareTo(Constant.MAX_BALANCE) > 0){
+            throw new Exception("Saldo maksimal penerima terlampaui");
         } else if (sender.getBalance().add(Constant.MIN_BALANCE).compareTo(newAmount) < 0){          //balance kurang
             throw new Exception("Saldo kurang untuk melakukan transaksi");
         } else if (Constant.MIN_TRANSACTION.compareTo(amount) > 0){         //transaksi harus lebih besar daripada batas minimal
@@ -117,9 +119,6 @@ public class TransactionService {
         transactionRecipient.setUserModel(recipient);
         transactionRepository.saveAll(List.of(transactionSender, transactionTax, transactionRecipient));
 
-        //COBA HAPUS, KAN UDAH SET USER DI TRANSACTION, yup bisa dihapus
-//        userRepository.save(sender);
-//        userRepository.save(recipient);
         return CreateDTO.builder()
                 .trxId(transactionSender.getTrxId())
                 .originUsername(sender.getUsername())

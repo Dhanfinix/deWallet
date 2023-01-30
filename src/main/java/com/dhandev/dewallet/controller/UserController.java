@@ -24,7 +24,7 @@ public class UserController {
     @Autowired
     private ModelMapper modelMapper;
 
-    //DONE register with unique username and password validation
+    //register with unique username and password validation
     @PostMapping("/registration")
     public ResponseEntity<Object> register(@RequestBody RegistDTO registDTO){
         try {
@@ -36,7 +36,7 @@ public class UserController {
     }
 
 
-    //DONE  show username and ktp columns, use DTO and ModelMapper
+    //show username and ktp columns, use DTO and ModelMapper
     @GetMapping("/{username}/getinfo")
     public ResponseEntity<Object> getInfo(@PathVariable String username){
         try {
@@ -48,7 +48,7 @@ public class UserController {
     }
 
 
-    //DONE change or add ktp to account based on its username and no same ktp
+    //change or add ktp to account based on its username and no same ktp
     @PutMapping("/{username}/addktp")
     public ResponseEntity<Object> addKtp(@PathVariable String username, @RequestBody AddKtpDTO addKtpDTO){
         try {
@@ -59,7 +59,7 @@ public class UserController {
         }
     }
 
-    //DONE Get user balance and its limit
+    //Get user balance and its limit
     @GetMapping("/{username}/getbalance")
     public ResponseEntity<Object> getBalance(@PathVariable String username){
         try {
@@ -70,7 +70,7 @@ public class UserController {
         }
     }
 
-    //DONE  Unban user by its username
+    //Unban user by its username
     @PutMapping("/{username}/unban")
     public ResponseEntity<Object> unBan(@PathVariable String username){
         try{
@@ -81,7 +81,7 @@ public class UserController {
         }
     }
 
-    //DONE Change user password, it should be unique and not same with the old one
+    //Change user password, it should be unique and not same with the old one
     @PostMapping("/changepassword")
     public ResponseEntity<Object> changePassword(@RequestBody ChangePassDTO changePassDTO){
         try{
