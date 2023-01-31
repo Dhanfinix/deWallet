@@ -6,6 +6,7 @@ import com.dhandev.dewallet.dto.UserDTO;
 import com.dhandev.dewallet.dto.request.AddKtpDTO;
 import com.dhandev.dewallet.dto.request.ChangePassDTO;
 import com.dhandev.dewallet.dto.request.RegistDTO;
+import com.dhandev.dewallet.exception.*;
 import com.dhandev.dewallet.mapper.UserMapper;
 import com.dhandev.dewallet.model.UserModel;
 import com.dhandev.dewallet.repository.UserRepository;
@@ -101,10 +102,10 @@ public class UserService {
         userRepository.save(userModel);
     }
 
-    public void changePassword(ChangePassDTO changePassDTO) throws Exception{
+    public void changePassword(ChangePassDTO changePassDTO) {
         UserModel userModel = userRepository.findByUsername(changePassDTO.getUsername());
         if (userModel == null) {
-            throw new Exception("Username tidak ditemukan");
+            throw new NoUserFoundException();
         }
         String oldPass = userModel.getPassword();   //dari database
         String newPass = changePassDTO.getPassword();          //dari input
@@ -114,19 +115,19 @@ public class UserService {
         if (!oldPass.equals(changePassDTO.getOldPassword())){
             if (attempt==3){
                 userModel.setBanned(true);
-                throw new Exception("Akun anda terblokir");
+                throw new AccountBlocked();
             }
             userModel.setPasswordAttempt(attempt+1);
-            throw new Exception("Password salah");
+            throw new WrongPassword();
         } else if (userModel.isBanned()){
-            throw new Exception("Akun anda terblokir");
+            throw new AccountBlocked();
         }
 
         //check antar input old dan new harus beda
         if (newPass.equals(oldPass)){
-            throw new Exception("Password baru sama dengan password lama");
+            throw new NewPassEqualOldPass();
         } else if (!newPass.matches(Constant.REGEX_PASSWORD)){
-            throw new Exception("Password minimal terdiri dari 10 karakter dengan angka, huruf kapital dan kecil, serta simbol");
+            throw new PassFormatInvalid();
         } else {
             userMapper.ChangePassToUserModel(changePassDTO, userModel);
         }
