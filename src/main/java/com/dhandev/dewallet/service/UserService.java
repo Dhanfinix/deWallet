@@ -2,11 +2,12 @@ package com.dhandev.dewallet.service;
 
 import com.dhandev.dewallet.constant.Constant;
 import com.dhandev.dewallet.dto.BalanceLimitDTO;
-import com.dhandev.dewallet.dto.UserDTO;
+import com.dhandev.dewallet.dto.GetInfoDTO;
 import com.dhandev.dewallet.dto.request.AddKtpDTO;
 import com.dhandev.dewallet.dto.request.ChangePassDTO;
 import com.dhandev.dewallet.dto.request.RegistDTO;
 import com.dhandev.dewallet.exception.*;
+import com.dhandev.dewallet.exception.user.*;
 import com.dhandev.dewallet.mapper.UserMapper;
 import com.dhandev.dewallet.model.UserModel;
 import com.dhandev.dewallet.repository.UserRepository;
@@ -14,6 +15,7 @@ import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.BindingResult;
 
 import java.math.BigDecimal;
 import java.text.NumberFormat;
@@ -30,14 +32,12 @@ public class UserService {
     @Autowired
     private UserMapper userMapper;
 
-    public void register(RegistDTO registDTO) throws Exception {
+    public void register(RegistDTO registDTO) {
         UserModel userModel;
-        if (registDTO.getUsername().isEmpty()){
-            throw new Exception("Nama tidak boleh kosong ");
-        } else if (!userRepository.findByUsernameEquals(registDTO.getUsername()).isEmpty()){
-            throw new Exception("Nama sudah digunakan");
+        if (!userRepository.findByUsernameEquals(registDTO.getUsername()).isEmpty()){
+            throw new UsernameAlreadyUsed();
         } else if (!registDTO.getPassword().matches(Constant.REGEX_PASSWORD)){
-            throw new Exception("Password minimal terdiri dari 10 karakter dengan angka, huruf kapital dan kecil");
+            throw new PassFormatInvalid();
         } else {
             userModel = userMapper.RegisToUserModel(registDTO);
             userModel.setBalance(BigDecimal.valueOf(0));
@@ -51,26 +51,26 @@ public class UserService {
         return nf.format(value);
     }
 
-    public UserDTO getInfo(String username) throws Exception{
+    public GetInfoDTO getInfo(String username){
         UserModel userModel = userRepository.findByUsername(username);
-        UserDTO userDTO;
+        GetInfoDTO getInfoDTO;
         if (userModel != null){
-            userDTO = userMapper.toUserDto(userModel);
+            getInfoDTO = userMapper.toUserDto(userModel);
         } else {
-            throw new Exception("Username tidak ditemukan");
+            throw new NoUserFoundException();
         }
-        return userDTO;
+        return getInfoDTO;
     }
 
-    public UserModel updateKtp(String name, AddKtpDTO addKtpDTO) throws Exception {
+    public UserModel updateKtp(String name, AddKtpDTO addKtpDTO) {
         UserModel userModel = userRepository.findByUsername(name);
 
         if (userModel == null){
-            throw new Exception("Username tidak ditemukan");
+            throw new NoUserFoundException();
         } else if (!addKtpDTO.getKtp().matches(Constant.REGEX_KTP)){
-            throw new Exception("Nomor KTP harus 16 digit dan tidak mengandung huruf");
+            throw new KtpFormatInvalid();
         } else if (!userRepository.findByKtpEquals(addKtpDTO.getKtp()).isEmpty()){  //bandingkan input dengan database
-            throw new Exception("Nomor KTP sudah digunakan");
+            throw new KtpAlreadyUsed();
         } else {
             //To update, need the same id to use mapper
             addKtpDTO.setId(userModel.getId());
@@ -80,24 +80,24 @@ public class UserService {
         return userRepository.save(userModel);
     }
 
-    public BalanceLimitDTO getBalance(String name) throws Exception{
+    public BalanceLimitDTO getBalance(String name){
         UserModel userModel = userRepository.findByUsername(name);
         BalanceLimitDTO balanceLimitDTO = new BalanceLimitDTO();
         if (userModel == null){
-            throw new Exception("Username tidak ditemukan");
+            throw new NoUserFoundException();
         } else {
             balanceLimitDTO = userMapper.toBalanceLimitDto(userModel);
         }
         return balanceLimitDTO;
     }
 
-    public void unBan(String name) throws Exception{
+    public void unBan(String name){
         UserModel userModel = userRepository.findByUsername(name);
         if (!userModel.getUsername().isEmpty()){
             userModel.setBanned(false);
             userModel.setPasswordAttempt(0);
         } else {
-            throw new Exception("Username tidak ditemukan");
+            throw new NoUserFoundException();
         }
         userRepository.save(userModel);
     }

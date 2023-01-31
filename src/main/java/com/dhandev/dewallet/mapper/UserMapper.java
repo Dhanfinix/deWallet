@@ -1,7 +1,7 @@
 package com.dhandev.dewallet.mapper;
 
 import com.dhandev.dewallet.dto.BalanceLimitDTO;
-import com.dhandev.dewallet.dto.UserDTO;
+import com.dhandev.dewallet.dto.GetInfoDTO;
 import com.dhandev.dewallet.dto.request.AddKtpDTO;
 import com.dhandev.dewallet.dto.request.ChangePassDTO;
 import com.dhandev.dewallet.dto.request.RegistDTO;
@@ -19,7 +19,7 @@ public interface UserMapper {
 
     UserModel AddKtpToUserModel(AddKtpDTO addKtpDTO, @MappingTarget UserModel userModel);
 
-    UserDTO toUserDto(UserModel userModel);
+    GetInfoDTO toUserDto(UserModel userModel);
 
     UserModel ChangePassToUserModel(ChangePassDTO changePassDTO, @MappingTarget UserModel userModel);
 

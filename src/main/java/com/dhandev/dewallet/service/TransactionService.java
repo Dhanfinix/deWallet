@@ -2,7 +2,11 @@ package com.dhandev.dewallet.service;
 
 import com.dhandev.dewallet.constant.Constant;
 import com.dhandev.dewallet.dto.CreateDTO;
-import com.dhandev.dewallet.dto.GetReportDTO;
+import com.dhandev.dewallet.exception.FormatInvalid;
+import com.dhandev.dewallet.exception.transaction.*;
+import com.dhandev.dewallet.exception.user.AccountBlocked;
+import com.dhandev.dewallet.exception.user.NoUserFoundException;
+import com.dhandev.dewallet.exception.user.WrongPassword;
 import com.dhandev.dewallet.model.TransactionModel;
 import com.dhandev.dewallet.model.UserModel;
 import com.dhandev.dewallet.repository.TransactionRepository;
@@ -12,16 +16,10 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static com.dhandev.dewallet.service.UserService.currencyFormat;
 
@@ -37,11 +35,7 @@ public class TransactionService {
     @Autowired
     private ModelMapper modelMapper;
 
-    public CreateDTO createDTO(BindingResult result, String username, String password, String destinationUsername, BigDecimal amount) throws Exception{
-        if (result.hasErrors()){
-            throw new Exception("Format invalid");
-        }
-
+    public CreateDTO createDTO(String username, String password, String destinationUsername, BigDecimal amount){
         UserModel sender = userRepository.findByUsername(username);
         TransactionModel transactionSender = new TransactionModel();
         TransactionModel transactionTax = new TransactionModel();
@@ -50,38 +44,38 @@ public class TransactionService {
         BigDecimal newAmount = amount.add(tax);   //amount setelah tambah tax
 
         if (sender == null){
-            throw new Exception("Tidak ditemukan username pengirim");
+            throw new NoUserFoundException();
         }
         int attempt = sender.getPasswordAttempt();
 
         if (!sender.getPassword().equals(password)){
             if (attempt==3){
                 sender.setBanned(true);
-                throw new Exception("Akun anda terblokir");
+                throw new AccountBlocked();
             }
             sender.setPasswordAttempt(attempt+1);
-            throw new Exception("Password salah");
+            throw new WrongPassword();
         } else if (sender.isBanned()){
-            throw new Exception("Akun anda terblokir");
+            throw new AccountBlocked();
         }
 
         UserModel recipient = userRepository.findByUsername(destinationUsername);
 
         if (recipient == null){
-            throw new Exception("Tidak ditemukan username penerima");
-        } else if (amount.compareTo(BigDecimal.valueOf(0)) <0){
-            throw new Exception("Top up gagal karena bernilai negatif");
+            throw new NoRecipientNameFound();
+        } else if (amount.compareTo(BigDecimal.valueOf(0)) <= 0){
+            throw new AmountZeroOrNegative();
         } else if (sender.getTransactionLimit().compareTo(amount) < 0){     //Jika limit lebih besar dari amount, lempar eror
             BigDecimal limit = sender.getTransactionLimit();
             currencyFormat(limit, new Locale("in", "ID"));
-            throw new Exception("Jumlah melewati limit pengiriman saat ini yaitu: " + limit);
+            throw new CreateExceedLimit(limit);
         } else if (recipient.getBalance().add(amount).compareTo(Constant.MAX_BALANCE) > 0){
-            throw new Exception("Saldo maksimal penerima terlampaui");
+            throw new BalanceExceed();
         } else if (sender.getBalance().add(Constant.MIN_BALANCE).compareTo(newAmount) < 0){          //balance kurang
-            throw new Exception("Saldo kurang untuk melakukan transaksi");
+            throw new BalanceNotEnough();
         } else if (Constant.MIN_TRANSACTION.compareTo(amount) > 0){         //transaksi harus lebih besar daripada batas minimal
             BigDecimal min_trx = Constant.MIN_TRANSACTION;
-            throw new Exception("Minimum transaksi adalah: " + min_trx);
+            throw new UnderMinTrx(min_trx);
         }
 
         sender.setPasswordAttempt(0);
@@ -133,29 +127,29 @@ public class TransactionService {
                 .build();
     }
 
-    public void topUp(String username, String password, BigDecimal amount) throws Exception{
+    public void topUp(String username, String password, BigDecimal amount){
         UserModel userModel = userRepository.findByUsername(username);
         TransactionModel transaction = new TransactionModel();
         BigDecimal maxTopUp = Constant.MAX_TOPUP;
         if (userModel == null) {
-            throw new Exception("Username tidak ditemukan");
+            throw new NoUserFoundException();
         }
         int attempt = userModel.getPasswordAttempt();
         if (!userModel.getPassword().equals(password)){
             if (attempt==3){
                 userModel.setBanned(true);
-                throw new Exception("Password salah tiga kali, akun terkunci");
+                throw new AccountBlocked();
             }
             userModel.setPasswordAttempt(attempt+1);
-            throw new Exception("Password salah");
+            throw new WrongPassword();
         } else if (userModel.isBanned()){
-            throw new Exception("Akun anda terblokir");
+            throw new AccountBlocked();
         } else if (amount.compareTo(BigDecimal.valueOf(0)) <= 0){
-            throw new Exception("Top up gagal karena bernilai negatif atau nol");
+            throw new AmountZeroOrNegative();
         } else if (maxTopUp.compareTo(amount) < 0){
-            throw new Exception("Jumlah melebihi nilai topup maksimum sebesar: " + maxTopUp);
+            throw new TopupExceedLimit();
         } else if (userModel.getBalance().add(amount).compareTo(Constant.MAX_BALANCE) > 0){
-            throw new Exception("Saldo maksimal terlampaui");
+            throw new BalanceExceed();
         }
         userModel.setPasswordAttempt(0);
 

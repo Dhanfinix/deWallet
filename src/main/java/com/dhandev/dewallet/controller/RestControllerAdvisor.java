@@ -1,6 +1,8 @@
 package com.dhandev.dewallet.controller;
 
 import com.dhandev.dewallet.exception.*;
+import com.dhandev.dewallet.exception.transaction.*;
+import com.dhandev.dewallet.exception.user.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -19,10 +21,22 @@ public class RestControllerAdvisor {
             AccountBlocked.class,
             WrongPassword.class,
             NewPassEqualOldPass.class,
-            PassFormatInvalid.class
+            PassFormatInvalid.class,
+            FormatInvalid.class,
+            UsernameAlreadyUsed.class,
+            KtpFormatInvalid.class,
+            KtpAlreadyUsed.class,
+            //transaction
+            NoRecipientNameFound.class,
+            AmountZeroOrNegative.class,
+            BalanceNotEnough.class,
+            CreateExceedLimit.class,
+            BalanceExceed.class,
+            UnderMinTrx.class,
+            TopupExceedLimit.class
     })
     @ResponseStatus(value = HttpStatus.BAD_REQUEST)
-    public ErrorMessage noUserFoundException(NoUserFoundException ex, WebRequest request){
+    public ErrorMessage noUserFoundException(RuntimeException ex, WebRequest request){
         return new ErrorMessage(
                 HttpStatus.BAD_REQUEST.value(),
                 new Date(),
