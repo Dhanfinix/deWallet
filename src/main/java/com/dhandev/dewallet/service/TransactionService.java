@@ -11,6 +11,7 @@ import jakarta.transaction.Transactional;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.math.BigDecimal;
@@ -36,7 +37,11 @@ public class TransactionService {
     @Autowired
     private ModelMapper modelMapper;
 
-    public CreateDTO createDTO(String username, String password, String destinationUsername, BigDecimal amount) throws Exception{
+    public CreateDTO createDTO(BindingResult result, String username, String password, String destinationUsername, BigDecimal amount) throws Exception{
+        if (result.hasErrors()){
+            throw new Exception("Format invalid");
+        }
+
         UserModel sender = userRepository.findByUsername(username);
         TransactionModel transactionSender = new TransactionModel();
         TransactionModel transactionTax = new TransactionModel();
