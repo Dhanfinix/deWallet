@@ -35,13 +35,13 @@ import java.util.Locale;
         KtpAlreadyUsed.class,
 })
 public class UserService {
+    private final UserRepository userRepository;
+    private final UserMapper userMapper;
 
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private ModelMapper modelMapper;
-    @Autowired
-    private UserMapper userMapper;
+    public UserService(UserRepository userRepository, UserMapper userMapper){
+        this.userRepository = userRepository;
+        this.userMapper = userMapper;
+    }
 
     public void register(RegistDTO registDTO) {
         UserModel userModel;

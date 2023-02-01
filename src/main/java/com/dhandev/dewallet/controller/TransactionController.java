@@ -19,10 +19,10 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/transaction")
 public class TransactionController {
-
-
-    @Autowired
-    private TransactionService transactionService;
+    private final TransactionService transactionService;
+    public TransactionController(TransactionService transactionService){
+        this.transactionService = transactionService;
+    }
 
     @PostMapping("/create")
     public ResponseEntity<Object> create(@Valid @RequestBody RequestCreateDTO request, BindingResult bindingResult){

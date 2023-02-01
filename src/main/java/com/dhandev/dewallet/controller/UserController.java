@@ -20,11 +20,11 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/user")
 public class UserController {
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
 
-    @Autowired
-    private ModelMapper modelMapper;
+    public UserController(UserService userService){
+        this.userService = userService;
+    }
 
     //register with unique username and password validation
     @PostMapping("/registration")

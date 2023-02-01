@@ -43,13 +43,12 @@ import static com.dhandev.dewallet.service.UserService.currencyFormat;
 })
 public class TransactionService {
 
-    @Autowired
-    private TransactionRepository transactionRepository;
-
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private ModelMapper modelMapper;
+    private final TransactionRepository transactionRepository;
+    private final UserRepository userRepository;
+    public TransactionService(TransactionRepository transactionRepository, UserRepository userRepository){
+        this.transactionRepository = transactionRepository;
+        this.userRepository = userRepository;
+    }
 
     public CreateDTO createDTO(String username, String password, String destinationUsername, BigDecimal amount){
         UserModel sender = userRepository.findByUsername(username);
@@ -87,7 +86,7 @@ public class TransactionService {
             throw new CreateExceedLimit(limit);
         } else if (recipient.getBalance().add(amount).compareTo(Constant.MAX_BALANCE) > 0){
             throw new BalanceExceed();
-        } else if (sender.getBalance().add(Constant.MIN_BALANCE).compareTo(newAmount) < 0){          //balance kurang
+        } else if (sender.getBalance().subtract(Constant.MIN_BALANCE).compareTo(newAmount) < 0){          //balance kurang
             throw new BalanceNotEnough();
         } else if (Constant.MIN_TRANSACTION.compareTo(amount) > 0){         //transaksi harus lebih besar daripada batas minimal
             BigDecimal min_trx = Constant.MIN_TRANSACTION;
