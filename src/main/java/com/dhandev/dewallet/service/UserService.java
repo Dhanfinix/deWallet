@@ -7,6 +7,7 @@ import com.dhandev.dewallet.dto.request.AddKtpDTO;
 import com.dhandev.dewallet.dto.request.ChangePassDTO;
 import com.dhandev.dewallet.dto.request.RegistDTO;
 import com.dhandev.dewallet.exception.*;
+import com.dhandev.dewallet.exception.transaction.*;
 import com.dhandev.dewallet.exception.user.*;
 import com.dhandev.dewallet.mapper.UserMapper;
 import com.dhandev.dewallet.model.UserModel;
@@ -22,7 +23,17 @@ import java.text.NumberFormat;
 import java.util.Locale;
 
 @Service
-@Transactional
+@Transactional(dontRollbackOn = {
+        NoUserFoundException.class,
+        AccountBlocked.class,
+        WrongPassword.class,
+        NewPassEqualOldPass.class,
+        PassFormatInvalid.class,
+        FormatInvalid.class,
+        UsernameAlreadyUsed.class,
+        KtpFormatInvalid.class,
+        KtpAlreadyUsed.class,
+})
 public class UserService {
 
     @Autowired

@@ -4,9 +4,7 @@ import com.dhandev.dewallet.constant.Constant;
 import com.dhandev.dewallet.dto.CreateDTO;
 import com.dhandev.dewallet.exception.FormatInvalid;
 import com.dhandev.dewallet.exception.transaction.*;
-import com.dhandev.dewallet.exception.user.AccountBlocked;
-import com.dhandev.dewallet.exception.user.NoUserFoundException;
-import com.dhandev.dewallet.exception.user.WrongPassword;
+import com.dhandev.dewallet.exception.user.*;
 import com.dhandev.dewallet.model.TransactionModel;
 import com.dhandev.dewallet.model.UserModel;
 import com.dhandev.dewallet.repository.TransactionRepository;
@@ -24,7 +22,25 @@ import java.util.*;
 import static com.dhandev.dewallet.service.UserService.currencyFormat;
 
 @Service
-@Transactional(dontRollbackOn = RuntimeException.class)
+@Transactional(dontRollbackOn = {
+        NoUserFoundException.class,
+        AccountBlocked.class,
+        WrongPassword.class,
+        NewPassEqualOldPass.class,
+        PassFormatInvalid.class,
+        FormatInvalid.class,
+        UsernameAlreadyUsed.class,
+        KtpFormatInvalid.class,
+        KtpAlreadyUsed.class,
+        //transaction
+        NoRecipientNameFound.class,
+        AmountZeroOrNegative.class,
+        BalanceNotEnough.class,
+        CreateExceedLimit.class,
+        BalanceExceed.class,
+        UnderMinTrx.class,
+        TopupExceedLimit.class
+})
 public class TransactionService {
 
     @Autowired
