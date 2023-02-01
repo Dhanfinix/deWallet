@@ -24,7 +24,7 @@ import java.util.*;
 import static com.dhandev.dewallet.service.UserService.currencyFormat;
 
 @Service
-@Transactional
+@Transactional(dontRollbackOn = RuntimeException.class)
 public class TransactionService {
 
     @Autowired
