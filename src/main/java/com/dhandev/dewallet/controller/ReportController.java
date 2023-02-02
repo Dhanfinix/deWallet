@@ -1,7 +1,6 @@
 package com.dhandev.dewallet.controller;
 
 import com.dhandev.dewallet.dto.GetReportDTO;
-import com.dhandev.dewallet.model.TransactionModel;
 import com.dhandev.dewallet.response.ResponseHandler;
 import com.dhandev.dewallet.service.ReportService;
 import org.springframework.beans.factory.annotation.Autowired;

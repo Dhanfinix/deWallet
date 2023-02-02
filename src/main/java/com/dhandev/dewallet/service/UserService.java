@@ -6,17 +6,13 @@ import com.dhandev.dewallet.dto.GetInfoDTO;
 import com.dhandev.dewallet.dto.request.AddKtpDTO;
 import com.dhandev.dewallet.dto.request.ChangePassDTO;
 import com.dhandev.dewallet.dto.request.RegistDTO;
-import com.dhandev.dewallet.exception.*;
-import com.dhandev.dewallet.exception.transaction.*;
+import com.dhandev.dewallet.exception.FormatInvalid;
 import com.dhandev.dewallet.exception.user.*;
 import com.dhandev.dewallet.mapper.UserMapper;
 import com.dhandev.dewallet.model.UserModel;
 import com.dhandev.dewallet.repository.UserRepository;
 import jakarta.transaction.Transactional;
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.validation.BindingResult;
 
 import java.math.BigDecimal;
 import java.text.NumberFormat;
@@ -73,7 +69,7 @@ public class UserService {
         return getInfoDTO;
     }
 
-    public UserModel updateKtp(String name, AddKtpDTO addKtpDTO) {
+    public void updateKtp(String name, AddKtpDTO addKtpDTO) {
         UserModel userModel = userRepository.findByUsername(name);
 
         if (userModel == null){
@@ -88,12 +84,12 @@ public class UserService {
             userModel = userMapper.AddKtpToUserModel(addKtpDTO, userModel);
             userModel.setTransactionLimit(Constant.MAX_TRANSACTION_WITH_KTP);
         }
-        return userRepository.save(userModel);
+        userRepository.save(userModel);
     }
 
     public BalanceLimitDTO getBalance(String name){
         UserModel userModel = userRepository.findByUsername(name);
-        BalanceLimitDTO balanceLimitDTO = new BalanceLimitDTO();
+        BalanceLimitDTO balanceLimitDTO;
         if (userModel == null){
             throw new NoUserFoundException();
         } else {

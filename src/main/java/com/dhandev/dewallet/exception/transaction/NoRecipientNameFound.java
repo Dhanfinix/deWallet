@@ -1,7 +1,5 @@
 package com.dhandev.dewallet.exception.transaction;
 
-import com.dhandev.dewallet.exception.user.NoUserFoundException;
-
 /**
  * @author Muhammad Ramdhan on 1/31/2023
  */

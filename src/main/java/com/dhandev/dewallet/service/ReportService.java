@@ -11,14 +11,13 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
 @Transactional
 public class ReportService {
-    @Autowired
-    private TransactionRepository transactionRepository;
 
     @Autowired
     private UserRepository userRepository;
