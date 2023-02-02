@@ -6,10 +6,10 @@ import java.util.Date;
  * @author Muhammad Ramdhan on 1/31/2023
  */
 public class ErrorMessage {
-    private int statusCode;
-    private Date timestamp;
-    private String message;
-    private String description;
+    private final int statusCode;
+    private final Date timestamp;
+    private final String message;
+    private final String description;
 
     public ErrorMessage(int statusCode, Date timestamp, String message, String description) {
         this.statusCode = statusCode;

@@ -21,7 +21,7 @@ public interface UserMapper {
 
     GetInfoDTO toUserDto(UserModel userModel);
 
-    UserModel ChangePassToUserModel(ChangePassDTO changePassDTO, @MappingTarget UserModel userModel);
+    void ChangePassToUserModel(ChangePassDTO changePassDTO, @MappingTarget UserModel userModel);
 
     @Mapping(target = "balance", source = "balance", numberFormat = "Rp###,###")
     @Mapping(target = "transactionLimit", source = "transactionLimit", numberFormat = "Rp###,###")

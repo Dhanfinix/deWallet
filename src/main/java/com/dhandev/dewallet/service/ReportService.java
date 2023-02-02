@@ -3,7 +3,6 @@ package com.dhandev.dewallet.service;
 import com.dhandev.dewallet.dto.GetReportDTO;
 import com.dhandev.dewallet.model.TransactionModel;
 import com.dhandev.dewallet.model.UserModel;
-import com.dhandev.dewallet.repository.TransactionRepository;
 import com.dhandev.dewallet.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
