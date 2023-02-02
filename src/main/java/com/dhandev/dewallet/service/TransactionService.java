@@ -73,6 +73,7 @@ public class TransactionService {
         } else if (sender.isBanned()){
             throw new AccountBlocked();
         }
+        sender.setPasswordAttempt(0);
 
         UserModel recipient = userRepository.findByUsername(destinationUsername);
 
@@ -92,8 +93,6 @@ public class TransactionService {
             BigDecimal min_trx = Constant.MIN_TRANSACTION;
             throw new UnderMinTrx(min_trx);
         }
-
-        sender.setPasswordAttempt(0);
 
         //sender
         transactionSender.setUsername(username);
@@ -159,14 +158,16 @@ public class TransactionService {
             throw new WrongPassword();
         } else if (userModel.isBanned()){
             throw new AccountBlocked();
-        } else if (amount.compareTo(BigDecimal.valueOf(0)) <= 0){
+        }
+        userModel.setPasswordAttempt(0);
+
+        if (amount.compareTo(BigDecimal.valueOf(0)) <= 0){
             throw new AmountZeroOrNegative();
         } else if (maxTopUp.compareTo(amount) < 0){
             throw new TopupExceedLimit();
         } else if (userModel.getBalance().add(amount).compareTo(Constant.MAX_BALANCE) > 0){
             throw new BalanceExceed();
         }
-        userModel.setPasswordAttempt(0);
 
         transaction.setUsername(username);
         transaction.setAmount(amount);

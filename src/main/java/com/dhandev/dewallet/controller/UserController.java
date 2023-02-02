@@ -71,7 +71,10 @@ public class UserController {
 
     //Change user password, it should be unique and not same with the old one
     @PostMapping("/changepassword")
-    public ResponseEntity<Object> changePassword(@RequestBody ChangePassDTO changePassDTO){
+    public ResponseEntity<Object> changePassword(@Valid @RequestBody ChangePassDTO changePassDTO, BindingResult bindingResult){
+        if (bindingResult.hasErrors()){
+            throw new FormatInvalid();
+        }
         userService.changePassword(changePassDTO);
         return ResponseHandler.generateResponse("OK", HttpStatus.OK, null);
     }

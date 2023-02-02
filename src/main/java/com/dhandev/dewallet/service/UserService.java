@@ -104,7 +104,7 @@ public class UserService {
 
     public void unBan(String name){
         UserModel userModel = userRepository.findByUsername(name);
-        if (!userModel.getUsername().isEmpty()){
+        if (userModel != null){
             userModel.setBanned(false);
             userModel.setPasswordAttempt(0);
         } else {
@@ -133,6 +133,7 @@ public class UserService {
         } else if (userModel.isBanned()){
             throw new AccountBlocked();
         }
+        userModel.setPasswordAttempt(0);
 
         //check antar input old dan new harus beda
         if (newPass.equals(oldPass)){
